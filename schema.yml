@@ -1,0 +1,438 @@
+openapi: 3.0.3
+info:
+  title: Unified Access Control System
+  version: 0.0.0
+paths:
+  /activity-log/:
+    get:
+      operationId: activity_log_list
+      tags:
+      - activity-log
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActivityLog'
+          description: ''
+  /email_otp/:
+    post:
+      operationId: email_otp_create
+      tags:
+      - email_otp
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailOTP'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EmailOTP'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EmailOTP'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailOTP'
+          description: ''
+  /login/:
+    post:
+      operationId: login_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      tags:
+      - login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+  /reset_password:
+    put:
+      operationId: reset_password_update
+      tags:
+      - reset_password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPassword'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ResetPassword'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ResetPassword'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResetPassword'
+          description: ''
+    patch:
+      operationId: reset_password_partial_update
+      tags:
+      - reset_password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedResetPassword'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedResetPassword'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedResetPassword'
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResetPassword'
+          description: ''
+  /service_providers/:
+    get:
+      operationId: service_providers_list
+      tags:
+      - service_providers
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServiceProvider'
+          description: ''
+    post:
+      operationId: service_providers_create
+      tags:
+      - service_providers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceProvider'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ServiceProvider'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ServiceProvider'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceProvider'
+          description: ''
+  /staffs/:
+    get:
+      operationId: staffs_list
+      tags:
+      - staffs
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Staff'
+          description: ''
+    post:
+      operationId: staffs_create
+      tags:
+      - staffs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Staff'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Staff'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Staff'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Staff'
+          description: ''
+  /token/refresh/:
+    post:
+      operationId: token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+components:
+  schemas:
+    ActionTypeEnum:
+      enum:
+      - Updated
+      - Restored
+      - Revoked
+      - Created
+      type: string
+      description: |-
+        * `Updated` - Updated
+        * `Restored` - Restored
+        * `Revoked` - Revoked
+        * `Created` - Created
+    ActivityLog:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          readOnly: true
+        id:
+          type: integer
+          readOnly: true
+        actor:
+          type: integer
+        action_type:
+          $ref: '#/components/schemas/ActionTypeEnum'
+        action_time:
+          type: string
+          format: date-time
+          readOnly: true
+        data:
+          type: object
+          additionalProperties: {}
+        date:
+          type: string
+          format: date
+          readOnly: true
+        time:
+          type: string
+          format: time
+          readOnly: true
+        activity:
+          type: string
+          readOnly: true
+      required:
+      - action_time
+      - action_type
+      - activity
+      - actor
+      - date
+      - id
+      - time
+      - url
+    EmailOTP:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      required:
+      - email
+    PatchedResetPassword:
+      type: object
+      properties:
+        password:
+          type: string
+          writeOnly: true
+          maxLength: 128
+        confirm_password:
+          type: string
+          writeOnly: true
+          maxLength: 128
+    ResetPassword:
+      type: object
+      properties:
+        password:
+          type: string
+          writeOnly: true
+          maxLength: 128
+        confirm_password:
+          type: string
+          writeOnly: true
+          maxLength: 128
+      required:
+      - confirm_password
+      - password
+    ServiceProvider:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        url:
+          type: string
+          format: uri
+          readOnly: true
+        picture:
+          type: string
+          format: uri
+        website_url:
+          type: string
+          format: uri
+          maxLength: 200
+        slug:
+          type: string
+          nullable: true
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+      required:
+      - id
+      - url
+      - website_url
+    Staff:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        url:
+          type: string
+          format: uri
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        first_name:
+          type: string
+          maxLength: 30
+        last_name:
+          type: string
+          maxLength: 30
+        phone_number:
+          type: string
+          maxLength: 128
+        tribe:
+          type: string
+          format: uri
+        squad:
+          type: string
+          format: uri
+        designation:
+          type: string
+          format: uri
+          nullable: true
+        full_designation:
+          type: string
+          readOnly: true
+      required:
+      - email
+      - first_name
+      - full_designation
+      - id
+      - last_name
+      - phone_number
+      - squad
+      - tribe
+      - url
+    TokenObtainPair:
+      type: object
+      properties:
+        email:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - email
+      - password
+      - refresh
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          writeOnly: true
+      required:
+      - access
+      - refresh
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

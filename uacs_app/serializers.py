@@ -14,10 +14,10 @@ class StaffSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Staff
-        fields = ['id,', 'url', 'email', 'first_name', 'last_name', 'phone_number', 'tribe', 'squad', 'designation', 'full_designation']
+        fields = ['id', 'url', 'email', 'first_name', 'last_name', 'phone_number', 'tribe', 'squad', 'designation', 'full_designation']
 
     
-    def get_full_designation(self,obj):
+    def get_full_designation(self,obj) -> str:
         return f"{obj.role}, {obj.designation}"
 
 
@@ -44,11 +44,11 @@ class ActivityLogSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = ActivityLog
-        fields = ['url', 'id', 'actor', 'action_type', 'action_time', 'data', 'activity']
+        fields = ['url', 'id', 'actor', 'action_type', 'action_time', 'data', 'date', 'time', 'activity']
         extra_kwargs = {'url': {'view_name': 'uacs:activitylog-detail'}}
 
 
-    def get_activity(self, obj):
+    def get_activity(self, obj) -> str:
         if obj.action_type == 'UPDATED':
             return f"{obj.action_type} {obj.content_object.staff.full_name()}'s permission for {obj.content_object.service_provider.name}"
         elif obj.action_type == 'REVOKED':
@@ -65,15 +65,23 @@ class EmailOTPSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
 
-class ResetPasswordSerializer(serializers.Serializer):
-    password1 = serializers.CharField(max_length=128, write_only=True)
-    password2 = serializers.CharField(max_length=128, write_only=True)
+class VerifyOTPSerializer(serializers.Serializer):
+    otp_code = serializers.CharField(max_length=6, write_only=True)
+
+
+class ResetPasswordSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(max_length=128, write_only=True)
+    confirm_password = serializers.CharField(max_length=128, write_only=True)
+
+    class Meta:
+        model = User
+        fields = ['password', 'confirm_password']
 
     def validate(self, attrs):
-        password1 = attrs.get('password1')
-        password2 = attrs.get('password2')
+        password = attrs.get('password')
+        confirm_password = attrs.get('confirm_password')
 
-        if password1 and password2 and password1 != password2:
+        if password and confirm_password and password != confirm_password:
             raise serializers.ValidationError("Passwords do not match.")
 
         return attrs

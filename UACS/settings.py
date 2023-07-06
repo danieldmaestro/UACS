@@ -15,6 +15,8 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+TEMPLATE_DIR = BASE_DIR / 'templates'
+
 
 from dotenv import load_dotenv
 
@@ -44,10 +46,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'accounts',
+    'rest_framework',
     'uacs_app',
     "phonenumber_field",
     'rest_framework_simplejwt',
     'django_celery_results',
+    'drf_spectacular',
+
 ]
 
 MIDDLEWARE = [
@@ -65,7 +70,7 @@ ROOT_URLCONF = 'UACS.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [TEMPLATE_DIR],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -90,6 +95,18 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': "Unified Access Control System"
+}
+
 
 # DATABASES = {
 #     'default': {
@@ -147,8 +164,14 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
-
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    BASE_DIR / 'UACS' /'static',
+     ]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -166,6 +189,8 @@ EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL')
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_HOST_USER')
+SERVER_EMAIL = 'momodufresh@gmail.com'
+
 
 # Celery Settings
 CELERY_BROKER_URL = 'redis://127.0.0.1:6379'
