@@ -1,11 +1,18 @@
 from django.urls import path
-from .views import ActivityLogListAPIView, ServiceProviderListCreateAPIView, StaffListCreateAPIView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
+from .views import (ActivityLogListAPIView, ServiceProviderListCreateAPIView, StaffListCreateAPIView, 
+                    SendOTPView, ResetPasswordAPIView)
 
 app_name = 'uacs'
 
 
 urlpatterns = [
+    path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('activity-log/', ActivityLogListAPIView.as_view(), name='activity_log_list'),
     path('service_providers/', ServiceProviderListCreateAPIView.as_view(), name="sp_list_create" ),
     path('staffs/', StaffListCreateAPIView.as_view(), name="staff_list_create"),
+    path('send_otp/', SendOTPView.as_view(), name="send_otp"),
+    path('reset_password', ResetPasswordAPIView.as_view(), name="reset_password"),
 ]

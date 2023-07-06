@@ -55,8 +55,28 @@ class ActivityLogSerializer(serializers.HyperlinkedModelSerializer):
             return f"{obj.action_type} access for {obj.content_object.full_name()}"
         elif obj.action_type == 'RESET':
             return f"{obj.action_type} access for {obj.content_object.full_name()}"
+        elif obj.action_type == 'LOGIN':
+            return f"Attempted login by {obj.content_object.email}"
         elif obj.action_type == 'CREATED':
             return f"{obj.action_type} a service provider, {obj.content_object.name}"
+        
+
+class EmailOTPSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+class ResetPasswordSerializer(serializers.Serializer):
+    password1 = serializers.CharField(max_length=128, write_only=True)
+    password2 = serializers.CharField(max_length=128, write_only=True)
+
+    def validate(self, attrs):
+        password1 = attrs.get('password1')
+        password2 = attrs.get('password2')
+
+        if password1 and password2 and password1 != password2:
+            raise serializers.ValidationError("Passwords do not match.")
+
+        return attrs
 
 
 

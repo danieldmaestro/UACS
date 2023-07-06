@@ -7,7 +7,7 @@ from django.dispatch import receiver
 from django.utils.text import slugify
 
 from base.constants import (INTERN, ANALYST, HEAD, MANAGER, MANAGING_DIRECTOR, VP,
-                             ASSOCIATE, UPDATED, CREATED, RESET, REVOKED)
+                             ASSOCIATE, UPDATED, CREATED, RESET, REVOKED, SUCCESS, ACTION_STATUS)
 from base.models import BaseModel, BaseActivityLog
 from accounts.models import User
 from phonenumber_field.modelfields import PhoneNumberField
@@ -23,9 +23,9 @@ class Squad(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
 
+
 class Designation(models.Model):
     name = models.CharField(max_length=100)
-
 
 
 class StaffBaseModel(BaseModel):
@@ -100,6 +100,8 @@ class ActivityLog(models.Model):
     actor = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     action_type = models.CharField(choices=ACTION_CHOICES, max_length=15)
     action_time = models.DateTimeField(auto_now_add=True)
+    remarks = models.TextField(blank=True, null=True)
+    status = models.CharField(choices=ACTION_STATUS, max_length=7, default=SUCCESS)
     data = models.JSONField(default=dict)
 
     # for generic relations
@@ -161,6 +163,6 @@ class ActivityLog(models.Model):
 #         return f"{self.action} a service provider, {self.service_provider}"
 
     
-# @receiver(pre_save, sender=ServiceProvider)
-# def slugify_name(sender, instance, **kwargs):
-#     instance.slug = slugify(instance.name)
+@receiver(pre_save, sender=ServiceProvider)
+def slugify_name(sender, instance, **kwargs):
+    instance.slug = slugify(instance.name)

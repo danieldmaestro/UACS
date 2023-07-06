@@ -8,7 +8,7 @@ from base.managers import MyUserManager
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=255, unique=True, verbose_name="email address")
     is_staff = models.BooleanField(default=False)
-
+    verification_code = models.CharField(max_length=6, null=True, blank=True)
 
     REQUIRED_FIELDS= []
     USERNAME_FIELD = "email"
