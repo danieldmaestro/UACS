@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os
+from datetime import timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -41,9 +42,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     'accounts',
     'uacs_app',
     "phonenumber_field",
+    'rest_framework_simplejwt',
+
 ]
 
 MIDDLEWARE = [
@@ -118,6 +122,16 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "SIGNING_KEY": os.environ.get('SECRET_KEY'),
+
+}
+
+PHONENUMBER_DB_FORMAT = "INTERNATIONAL"
+
+PHONENUMBER_DEFAULT_FORMAT = "INTERNATIONAL"
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/

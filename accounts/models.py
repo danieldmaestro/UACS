@@ -2,7 +2,6 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
 
 from base.managers import MyUserManager
-from base.models import StaffBaseModel, BaseModel
 
 # Create your models here.
 
@@ -20,11 +19,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
  
     
-class Admin(StaffBaseModel):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="admin")
 
-    def __str__(self) -> str:
-        return self.full_name()
 
 
 
