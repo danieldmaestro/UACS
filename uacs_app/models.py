@@ -15,17 +15,26 @@ from phonenumber_field.modelfields import PhoneNumberField
 # Create your models here.
 
 class Tribe(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     description = models.TextField()
+
+    def __str__(self):
+        return self.name
 
 
 class Squad(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     description = models.TextField()
+
+    def __str__(self):
+        return self.name
 
 
 class Designation(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
 
 
 class StaffBaseModel(BaseModel):
@@ -73,7 +82,8 @@ class ServiceProvider(BaseModel):
     name = models.CharField(max_length=150)
     picture = models.ImageField(upload_to='accounts/media', blank=True)
     website_url = models.URLField()
-    slug = models.SlugField(null=True)
+    slug = models.SlugField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
 
     def __str__(self) -> str:
         return self.name
@@ -117,15 +127,15 @@ class ActivityLog(models.Model):
     def __str__(self) -> str:
         return f"{self.action_type} by {self.actor} on {self.action_time}"
 
-    # def get_activity(self):
-    #     if self.action_type == UPDATED:
-    #         return f"{self.action_type} {self.content_object.staff.full_name()}'s permission for {self.content_object.service_provider.name}"
-    #     elif self.action_type == REVOKED:
-    #         return f"{self.action_type} access for {self.content_object.full_name()}"
-    #     elif self.action_type == RESET:
-    #         return f"{self.action_type} access for {self.content_object.full_name()}"
-    #     elif self.action_type == CREATED:
-    #         return f"{self.action_type} a service provider, {self.content_object.name}"
+    def get_activity(self):
+        if self.action_type == UPDATED:
+            return f"{self.action_type} {self.content_object.staff.full_name()}'s permission for {self.content_object.service_provider.name}"
+        elif self.action_type == REVOKED:
+            return f"{self.action_type} access for {self.content_object.full_name()}"
+        elif self.action_type == RESET:
+            return f"{self.action_type} access for {self.content_object.full_name()}"
+        elif self.action_type == CREATED:
+            return f"{self.action_type} a service provider"
 
     
     

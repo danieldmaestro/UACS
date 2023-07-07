@@ -8,43 +8,82 @@ User = get_user_model()
 
 from .models import Staff, StaffPermission, ServiceProvider, ActivityLog
 
+
+
+class StaffPermissionSerializer(serializers.HyperlinkedModelSerializer):
+    url = serializers.HyperlinkedIdentityField(view_name="uacs:staff_permission_detail", read_only=True)
+    sp_list = serializers.PrimaryKeyRelatedField(queryset=ServiceProvider.objects.all(), many=True, write_only=True)
+    staff_list = serializers.PrimaryKeyRelatedField(queryset=Staff.objects.all(), many=True, write_only=True)
+    staff = serializers.HyperlinkedRelatedField(view_name="uacs:staff_detail", read_only=True)
+    service_provider = serializers.HyperlinkedRelatedField(view_name="uacs:sp_detail", read_only=True)
+
+    class Meta:
+        model = StaffPermission
+        fields = ['id', 'url', 'staff', 'service_provider', 'staff_list', 'sp_list']
+
+
+
 class StaffSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name="uacs:staff_detail", read_only=True)
     full_designation = serializers.SerializerMethodField()
+    tribe = serializers.CharField(source="tribe.name", read_only=True)
+    squad = serializers.CharField(source="squad.name", read_only=True)
+    designation = serializers.CharField(source="designation.name", read_only=True)
+    tribe_name = serializers.CharField(write_only=True)
+    squad_name = serializers.CharField(write_only=True)
+    designation_name = serializers.CharField(write_only=True)
+    reset_url = serializers.SerializerMethodField()
+    revoke_url = serializers.SerializerMethodField()
+    permissions = serializers.SerializerMethodField()
 
     class Meta:
         model = Staff
-        fields = ['id', 'url', 'email', 'first_name', 'last_name', 'phone_number', 'tribe', 'squad', 'designation', 'full_designation']
+        fields = ['id', 'url', 'email', 'first_name', 'last_name', 'phone_number', 'tribe', 'squad', 'role', 
+                  'designation', 'full_designation', 'tribe_name', 'squad_name', 'designation_name', 
+                  'reset_url', 'revoke_url', 'permissions']
 
     
     def get_full_designation(self,obj) -> str:
         return f"{obj.role}, {obj.designation}"
+    
+    def get_reset_url(self, obj):
+        request = self.context.get('request')
+        if request is not None:
+            return reverse('uacs:reset', args=[obj.id], request=request)
+        return None
 
+    def get_revoke_url(self, obj):
+        request = self.context.get('request')
+        if request is not None:
+            return reverse('uacs:revoke', args=[obj.id], request=request)
+        return None
+    
+    def get_permissions(self, obj):
+        permissions = obj.sp_permissions.all()
+        request = self.context.get('request')
+        if request is not None:
+            return StaffPermissionSerializer(permissions, many=True, context={'request': request}).data
+        return None
 
 
 class ServiceProviderSerializer(serializers.HyperlinkedModelSerializer):
-    url = serializers.HyperlinkedIdentityField(view_name="uacs:service_provider_detail", read_only=True)
+    url = serializers.HyperlinkedIdentityField(view_name="uacs:sp_detail", read_only=True)
+    slug = serializers.SlugField(read_only=True)
+    picture = serializers.ImageField(read_only=True)
     class Meta:
         model = ServiceProvider
-        fields = ['id', 'url', 'picture', 'website_url', 'slug',  ]
+        fields = ['id', 'url', 'picture', 'name', 'website_url', 'slug', ]
 
 
-class StaffPermissionSerializer(serializers.HyperlinkedModelSerializer):
-    url = serializers.HyperlinkedIdentityField(view_name="uacs:staff_permision_detail", read_only=True)
-    class Meta:
-        model = StaffPermission
-        fields = ['id', 'url', 'staff', 'service_provider', 'is_permitted']
-
-
-class ActivityLogSerializer(serializers.HyperlinkedModelSerializer):
+class ActivityLogSerializer(serializers.ModelSerializer):
     actor = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     activity = serializers.SerializerMethodField()
-    date = serializers.DateField(source='action_time.date', read_only=True)
-    time = serializers.TimeField(source='action_time.time', read_only=True)
+    date = serializers.SerializerMethodField()
+    time = serializers.SerializerMethodField()
 
     class Meta:
         model = ActivityLog
-        fields = ['url', 'id', 'actor', 'action_type', 'action_time', 'data', 'date', 'time', 'activity']
+        fields = ['id', 'actor', 'action_time', 'date', 'time', 'status', 'activity']
         extra_kwargs = {'url': {'view_name': 'uacs:activitylog-detail'}}
 
 
@@ -60,6 +99,12 @@ class ActivityLogSerializer(serializers.HyperlinkedModelSerializer):
         elif obj.action_type == 'CREATED':
             return f"{obj.action_type} a service provider, {obj.content_object.name}"
         
+    def get_date(self, obj) -> str:
+        return obj.action_time.date()
+    
+    def get_time(self, obj) -> str:
+        return obj.action_time.time()
+        
 
 class EmailOTPSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -67,6 +112,7 @@ class EmailOTPSerializer(serializers.Serializer):
 
 class VerifyOTPSerializer(serializers.Serializer):
     otp_code = serializers.CharField(max_length=6, write_only=True)
+    email = serializers.EmailField(write_only=True)
 
 
 class ResetPasswordSerializer(serializers.ModelSerializer):

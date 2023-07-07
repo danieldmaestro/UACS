@@ -3,6 +3,8 @@ import requests
 
 from dotenv import load_dotenv
 
+from .models import ServiceProvider, Staff, StaffPermission
+
 load_dotenv()
 
 def get_user_location(request):
@@ -21,3 +23,7 @@ def get_client_ip(request):
         if x_forwarded_for
         else request.META.get("REMOTE_ADDR")
     )
+
+def create_permissions(staff):
+    for sp_obj in ServiceProvider.objects.all():
+        StaffPermission.objects.create(staff=staff, service_provider=sp_obj)

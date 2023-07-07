@@ -57,7 +57,7 @@ class ActivityLogMixin:
             "actor": actor,
             "action_type": self._get_action_type(request),
             "status": status,
-            "remarks": self.get_log_message(request),
+            "remarks": self.get_log_message(request), 
         }
         try:
             data["content_type"] = ContentType.objects.get_for_model(
