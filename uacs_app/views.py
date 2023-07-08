@@ -112,7 +112,6 @@ class ServiceProviderDetailAPIView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated]
 
 
-
 class ActivityLogListAPIView(generics.ListAPIView):
     queryset = ActivityLog.objects.all()
     serializer_class = ActivityLogSerializer
@@ -222,18 +221,13 @@ class StaffPermissionDetailAPIView(generics.RetrieveAPIView):
     lookup_field = 'pk'
 
 
-
-
 class StaffPermissionListAPIView(generics.ListAPIView):
     serializer_class = StaffPermissionSerializer
     queryset = StaffPermission.objects.all()
 
     
-
-
-
-
-
+class StaffPermissionUpdateAPIView(generics.UpdateAPIView):
+    pass
 
 
 

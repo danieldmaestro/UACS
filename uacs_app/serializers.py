@@ -16,10 +16,16 @@ class StaffPermissionSerializer(serializers.HyperlinkedModelSerializer):
     staff_list = serializers.PrimaryKeyRelatedField(queryset=Staff.objects.all(), many=True, write_only=True)
     staff = serializers.HyperlinkedRelatedField(view_name="uacs:staff_detail", read_only=True)
     service_provider = serializers.HyperlinkedRelatedField(view_name="uacs:sp_detail", read_only=True)
+    name = serializers.SerializerMethodField()
+    
 
     class Meta:
         model = StaffPermission
-        fields = ['id', 'url', 'staff', 'service_provider', 'staff_list', 'sp_list']
+        fields = ['id', 'url', 'name','staff', 'service_provider', 'staff_list', 'sp_list', 'is_permitted']
+        read_only_fields =('is_permitted', 'name')
+
+    def get_name(self, obj):
+        return obj.service_provider.name
 
 
 
@@ -52,13 +58,13 @@ class StaffSerializer(serializers.HyperlinkedModelSerializer):
             return reverse('uacs:reset', args=[obj.id], request=request)
         return None
 
-    def get_revoke_url(self, obj):
+    def get_revoke_url(self, obj) -> str:
         request = self.context.get('request')
         if request is not None:
             return reverse('uacs:revoke', args=[obj.id], request=request)
         return None
     
-    def get_permissions(self, obj):
+    def get_permissions(self, obj) -> str:
         permissions = obj.sp_permissions.all()
         request = self.context.get('request')
         if request is not None:
