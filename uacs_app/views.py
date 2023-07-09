@@ -7,15 +7,16 @@ from rest_framework import generics
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from accounts.models import User
+from base.constants import UPDATED, CREATED, REVOKED, RESET, LOGIN, LOGOUT, LOGIN_FAILED, SUCCESS, FAILED
 from .mixins import ActivityLogMixin
 from .models import ActivityLog, Staff, Tribe, Squad, Designation, ServiceProvider, StaffPermission
 from .serializers import (StaffSerializer,ServiceProviderSerializer, StaffPermissionSerializer,
                             ActivityLogSerializer, EmailOTPSerializer, ResetPasswordSerializer,
-                            VerifyOTPSerializer)
+                            VerifyOTPSerializer, LoginSerializer, LogoutSerializer)
 from .tasks import send_otp_mail
 from .utils import create_permissions
 
@@ -25,19 +26,27 @@ def generate_otp():
     # Generate a random 6-digit OTP code
     return str(random.randint(100000, 999999))
 
-class LogoutAPIView(ActivityLogMixin, generics.GenericAPIView):
+class LoginAPIView(TokenObtainPairView):
+    serializer_class = LoginSerializer
 
-    def get_serializer_class(self):
-        return None
+    def post(self, request, *args, **kwargs):
+        request.data['action'] = LOGIN
+        return super().post(request, *args, **kwargs)
+    
+
+class LogoutAPIView(generics.GenericAPIView):
+
+    serializer_class = LogoutSerializer
     
     def post(self, request):
-        try:
-            refresh_token = request.data["refresh_token"]
-            token = RefreshToken(refresh_token)
-            token.blacklist()
-            return Response(status=status.HTTP_205_RESET_CONTENT)
-        except Exception as e:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        request.data['action'] = LOGOUT
+        serializer = self.get_serializer_class()(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        refresh = serializer.validated_data['refresh']
+        token = RefreshToken(refresh)
+        token.blacklist()
+        return Response({"message": "Logged out successfully"}, status=status.HTTP_205_RESET_CONTENT)
+       
         
 
 class StaffListCreateAPIView(generics.ListCreateAPIView):
@@ -70,27 +79,33 @@ class StaffDetailAPIView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated]
 
 
-class StaffAccessResetAPIView(generics.UpdateAPIView):
+class StaffAccessResetAPIView(ActivityLogMixin, generics.UpdateAPIView):
     queryset = Staff.objects.all()
     serializer_class = StaffSerializer
 
     def patch(self, request, *args, **kwargs):
+        request.data['action'] = RESET
         instance = self.get_object()
-        instance.is_active = True
-        instance.save()
-        return Response({'message': 'Staff access reset successfully.'}, status=status.HTTP_200_OK)
+        if not instance.is_active:
+            instance.is_active = True
+            instance.save()
+            return Response({'message': 'Staff access has been restored successfully.'}, status=status.HTTP_200_OK)
+        return Response({'message': 'Staff access is not revoked.'}, status=status.HTTP_400_BAD_REQUEST)
+        
     
-
-class StaffAccessRevokeAPIView(generics.UpdateAPIView):
+class StaffAccessRevokeAPIView(ActivityLogMixin, generics.UpdateAPIView):
     queryset = Staff.objects.all()
     serializer_class = StaffSerializer
 
     def patch(self, request, *args, **kwargs):
+        request.data['action'] = REVOKED
         instance = self.get_object()
-        instance.is_active = False
-        instance.save()
-        return Response({'message': 'Staff access revoked successfully.'}, status=status.HTTP_200_OK)
-
+        if instance.is_active:
+            instance.is_active = False
+            instance.save()
+            return Response({'message': 'Staff access has been revoked successfully.'}, status=status.HTTP_200_OK)
+        return Response({'message': 'Staff access is already revoked.'}, status=status.HTTP_400_BAD_REQUEST)
+        
 
 class ServiceProviderListCreateAPIView(ActivityLogMixin, generics.ListCreateAPIView):
     serializer_class = ServiceProviderSerializer
@@ -99,13 +114,27 @@ class ServiceProviderListCreateAPIView(ActivityLogMixin, generics.ListCreateAPIV
 
     def perform_create(self, serializer):
         service_provider = serializer.save()
-        service_provider.save()
+        self.created_sp = service_provider
         for staff in Staff.objects.all():
             StaffPermission.objects.create(staff=staff, service_provider=service_provider)
 
         return Response({'message': 'Service Provider created succesfully'}, status=status.HTTP_201_CREATED)
+    
 
+class ServiceProviderToggleStatusAPIView(ActivityLogMixin, generics.UpdateAPIView):
+    serializer_class = ServiceProviderSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = ServiceProvider.objects.all()
 
+    def patch(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.is_active = not instance.is_active
+        instance.save()
+        if instance.is_active:
+            return Response({'message': f'{instance.name} status is set to Active'})
+        return Response({'message': f'{instance.name} status is set to Inactive'})
+    
+        
 class ServiceProviderDetailAPIView(generics.RetrieveAPIView):
     serializer_class = ServiceProviderSerializer
     queryset = ServiceProvider.objects.all()

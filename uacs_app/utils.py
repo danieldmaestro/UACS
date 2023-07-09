@@ -10,6 +10,7 @@ load_dotenv()
 def get_user_location(request):
     ip = request.META.get('REMOTE_ADDR')
     response = requests.get(f"http://api.ipstack.com/{ip}?access_key={os.environ.get('API_KEY')}")
+    print(response.status_code)
     if response.status_code == 200:
         data = response.json()
         location = f"{data['city']}, {data['country_name']}"

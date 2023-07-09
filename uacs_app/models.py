@@ -2,12 +2,13 @@ from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.db import models
-from django.db.models.signals import pre_save
+from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 from django.utils.text import slugify
 
 from base.constants import (INTERN, ANALYST, HEAD, MANAGER, MANAGING_DIRECTOR, VP,
-                             ASSOCIATE, UPDATED, CREATED, RESET, REVOKED, SUCCESS, ACTION_STATUS)
+                             ASSOCIATE, UPDATED, CREATED, RESET, REVOKED, SUCCESS, ACTION_STATUS,
+                             LOGIN, LOGOUT)
 from base.models import BaseModel, BaseActivityLog
 from accounts.models import User
 from phonenumber_field.modelfields import PhoneNumberField
@@ -56,6 +57,7 @@ class StaffBaseModel(BaseModel):
     squad = models.ForeignKey(Squad, on_delete=models.CASCADE)
     designation = models.ForeignKey(Designation, on_delete=models.CASCADE, null=True)
     role = models.CharField(max_length=100, choices=ROLE_CHOICES, null=True)
+    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
 
     class Meta:
         abstract = True
@@ -80,7 +82,7 @@ class Admin(StaffBaseModel):
 
 class ServiceProvider(BaseModel):
     name = models.CharField(max_length=150)
-    picture = models.ImageField(upload_to='accounts/media', blank=True)
+    picture = models.ImageField(upload_to='sp_picture/', blank=True, null=True)
     website_url = models.URLField()
     slug = models.SlugField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
@@ -103,6 +105,8 @@ ACTION_CHOICES = (
         (RESET, RESET),
         (REVOKED, REVOKED),
         (CREATED, CREATED),
+        (LOGIN, LOGIN),
+        (LOGOUT, LOGOUT),
     )
 
 
@@ -176,3 +180,4 @@ class ActivityLog(models.Model):
 @receiver(pre_save, sender=ServiceProvider)
 def slugify_name(sender, instance, **kwargs):
     instance.slug = slugify(instance.name)
+

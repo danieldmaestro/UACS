@@ -3,12 +3,62 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 from rest_framework import serializers
 from rest_framework.reverse import reverse
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from base.constants import UPDATED, CREATED, REVOKED, RESET, LOGIN, LOGIN_FAILED, SUCCESS, FAILED
+from .models import Staff, StaffPermission, ServiceProvider, ActivityLog, Admin
+from uacs_app import signals
 
 User = get_user_model()
 
-from .models import Staff, StaffPermission, ServiceProvider, ActivityLog
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
 
+    def get_token(self, user):
+        refresh_token = RefreshToken.for_user(user)
+        access = str(refresh_token.access_token)
+        refresh = str(refresh_token)
+        return access, refresh
 
+    def validate(self, attrs):
+        email = attrs.get('email')
+        password = attrs.get('password')
+        admin = Admin.objects.get(user__email=email)
+        
+        if not admin or not admin.user.check_password(password):
+            credentials = {'email': email}
+            signals.user_login_failed.send(sender=User, credentials=credentials, request=request)
+            raise serializers.ValidationError('Invalid login credentials or not a verified user')
+        
+        request = self.context.get('request')
+        access, refresh = self.get_token(admin.user)
+        
+        payload = {
+            'first_name': admin.first_name,
+            'last_name': admin.last_name,
+            'profile_picture': request.build_absolute_uri(admin.profile_picture.url) if admin.profile_picture else "empty",
+            'email': email,
+            'access': access,
+            'refresh': refresh,
+        }
+        signals.user_logged_in.send(sender=User, request=request, user=admin.user)
+        return payload
+    
+
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        refresh = attrs.get("refresh")
+        try:
+            token = RefreshToken(refresh)
+            return {'refresh': refresh}
+        except TokenError:
+            raise serializers.ValidationError('Invalid Refresh Token')
+        
+    
 
 class StaffPermissionSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name="uacs:staff_permission_detail", read_only=True)
@@ -22,9 +72,9 @@ class StaffPermissionSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = StaffPermission
         fields = ['id', 'url', 'name','staff', 'service_provider', 'staff_list', 'sp_list', 'is_permitted']
-        read_only_fields =('is_permitted', 'name')
+        read_only_fields = ('is_permitted', 'name')
 
-    def get_name(self, obj):
+    def get_name(self, obj) -> str:
         return obj.service_provider.name
 
 
@@ -46,13 +96,13 @@ class StaffSerializer(serializers.HyperlinkedModelSerializer):
         model = Staff
         fields = ['id', 'url', 'email', 'first_name', 'last_name', 'phone_number', 'tribe', 'squad', 'role', 
                   'designation', 'full_designation', 'tribe_name', 'squad_name', 'designation_name', 
-                  'reset_url', 'revoke_url', 'permissions']
+                  'reset_url', 'revoke_url', 'permissions', 'profile_picture']
 
     
     def get_full_designation(self,obj) -> str:
         return f"{obj.role}, {obj.designation}"
     
-    def get_reset_url(self, obj):
+    def get_reset_url(self, obj) -> str:
         request = self.context.get('request')
         if request is not None:
             return reverse('uacs:reset', args=[obj.id], request=request)
@@ -76,9 +126,30 @@ class ServiceProviderSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name="uacs:sp_detail", read_only=True)
     slug = serializers.SlugField(read_only=True)
     picture = serializers.ImageField(read_only=True)
+    staffs_with_permission = serializers.SerializerMethodField()
+    date = serializers.SerializerMethodField()
+    toggle_status_url = serializers.SerializerMethodField()
     class Meta:
         model = ServiceProvider
-        fields = ['id', 'url', 'picture', 'name', 'website_url', 'slug', ]
+        fields = ['id', 'url', 'picture', 'name', 'date', 'website_url', 'slug', 'toggle_status_url', 'staffs_with_permission',]
+
+    def get_staffs_with_permission(self, obj) -> dict:
+        staffs = Staff.objects.filter(sp_permissions__service_provider=obj,
+                                    sp_permissions__is_permitted=True)
+        request = self.context.get('request')
+        if request is not None:
+            return StaffSerializer(staffs, many=True, context={'request': request}).data
+        return None
+    
+    def get_date(self,obj) -> str:
+        return obj.created_date.date()  
+
+    def get_toggle_status_url(self, obj) -> str:
+        request = self.context.get('request')
+        if request is not None:
+            return reverse('uacs:sp_toggle_status', args=[obj.id], request=request)
+        return None
+
 
 
 class ActivityLogSerializer(serializers.ModelSerializer):
@@ -94,16 +165,19 @@ class ActivityLogSerializer(serializers.ModelSerializer):
 
 
     def get_activity(self, obj) -> str:
-        if obj.action_type == 'UPDATED':
+        if obj.action_type == UPDATED:
             return f"{obj.action_type} {obj.content_object.staff.full_name()}'s permission for {obj.content_object.service_provider.name}"
-        elif obj.action_type == 'REVOKED':
+        elif obj.action_type == REVOKED:
             return f"{obj.action_type} access for {obj.content_object.full_name()}"
-        elif obj.action_type == 'RESET':
+        elif obj.action_type == RESET:
             return f"{obj.action_type} access for {obj.content_object.full_name()}"
-        elif obj.action_type == 'LOGIN':
-            return f"Attempted login by {obj.content_object.email}"
-        elif obj.action_type == 'CREATED':
+        elif obj.action_type == CREATED:
             return f"{obj.action_type} a service provider, {obj.content_object.name}"
+        elif obj.action_type == LOGIN:
+            return f"Attempted login by {obj.actor.email}"
+        elif obj.action_type == LOGIN_FAILED:
+            remark_list = [item.strip() for item in obj.remark.split(",")]
+            return f"Attempted login by {remark_list[0]}"
         
     def get_date(self, obj) -> str:
         return obj.action_time.date()

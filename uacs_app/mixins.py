@@ -6,7 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from rest_framework.exceptions import ValidationError
 
 from .models import ActivityLog
-from base.constants import UPDATED, CREATED, REVOKED, RESET, LOGIN, SUCCESS, FAILED
+from base.constants import UPDATED, CREATED, REVOKED, RESET, LOGIN, LOGOUT, LOGIN_FAILED, SUCCESS, FAILED
 
 
 class ActivityLogMixin:
@@ -26,17 +26,22 @@ class ActivityLogMixin:
     log_message = None
 
     def _get_action_type(self, request) -> str:
-        if request.method.upper() == "POST":
-            action = request.data.get("action")  # Assuming 'action' is a field in the request data
+        action = request.data.get("action")  # Assuming 'action' is a field in the request data
+        if request.method.upper() == "PATCH":
             if action == REVOKED:
                 return REVOKED
             elif action == RESET:
                 return RESET
             elif action == UPDATED:
                 return UPDATED
-            elif action == LOGIN:
+        elif request.method.upper() == "POST":
+            if action == LOGIN:
                 return LOGIN
-        return CREATED
+            elif action == LOGOUT:
+                return LOGOUT
+            elif action == LOGIN_FAILED:
+                return LOGIN_FAILED
+            return CREATED
 
     def _build_log_message(self, request) -> str:
         return f"User: {self._get_user(request)} -- Action Type: {self._get_action_type(request)} -- Path: {request.path} -- Path Name: {request.resolver_match.url_name}"
@@ -63,8 +68,10 @@ class ActivityLogMixin:
             data["content_type"] = ContentType.objects.get_for_model(
                 self.get_queryset().model
             )
-            data["content_object"] = self.get_object()
-            data["object_id"] = self.get_object().id
+            data["content_object"] = self.created_sp if self.created_sp else self.get_object()
+            print(data["content_object"])
+            data["object_id"] = self.created_sp.id if self.created_sp else self.get_object().id
+            print(data["object_id"])
         except (AttributeError, ValidationError):
             data["content_type"] = None
         except AssertionError:

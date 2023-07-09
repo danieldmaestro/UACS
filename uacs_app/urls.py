@@ -5,19 +5,21 @@ from .views import (ActivityLogListAPIView, ServiceProviderListCreateAPIView, St
                     EmailOTPAPIView, ResetPasswordAPIView, LogoutAPIView, StaffDetailAPIView, 
                     ServiceProviderDetailAPIView, ActivityLogDetailAPIView, VerifyOTPAPIView,
                     StaffPermissionSetAPIView, StaffAccessResetAPIView, StaffAccessRevokeAPIView,
-                    StaffPermissionDetailAPIView, StaffPermissionListAPIView)
+                    StaffPermissionDetailAPIView, StaffPermissionListAPIView, ServiceProviderToggleStatusAPIView,
+                    LoginAPIView)
 
 app_name = 'uacs'
 
 
 urlpatterns = [
-    path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('login/', LoginAPIView.as_view(), name='login'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('logout/', LogoutAPIView.as_view(), name="logout"),
     path('activity-log/', ActivityLogListAPIView.as_view(), name='activity_log_list'),
     path('activity-log/<int:pk>', ActivityLogDetailAPIView.as_view(), name='activity_log_detail'),
     path('service_providers/', ServiceProviderListCreateAPIView.as_view(), name="sp_list_create" ),
     path('service_providers/<int:pk>/', ServiceProviderDetailAPIView.as_view(), name="sp_detail" ),
+    path('service_providers/<int:pk>/status_toggle/', ServiceProviderToggleStatusAPIView.as_view(), name="sp_toggle_status" ),
     path('staffs/', StaffListCreateAPIView.as_view(), name="staff_list_create"),
     path('staffs/<int:pk>/', StaffDetailAPIView.as_view(), name="staff_detail"),
     path('staff/<int:pk>/revoke/', StaffAccessRevokeAPIView.as_view(), name='revoke'),
