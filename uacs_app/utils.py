@@ -13,6 +13,7 @@ def get_user_location(request):
     print(response.status_code)
     if response.status_code == 200:
         data = response.json()
+        print(data)
         location = f"{data['city']}, {data['country_name']}"
         return location
     return None
