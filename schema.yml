@@ -236,43 +236,48 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TokenObtainPair'
+              $ref: '#/components/schemas/Login'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/TokenObtainPair'
+              $ref: '#/components/schemas/Login'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/TokenObtainPair'
+              $ref: '#/components/schemas/Login'
         required: true
       responses:
         '200':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TokenObtainPair'
+                $ref: '#/components/schemas/Login'
           description: ''
   /logout/:
     post:
       operationId: logout_create
-      description: |-
-        Mixin to track user actions
-
-        :cvar log_message:
-            Log message to populate remarks in LogAction
-
-            type --> str
-
-            set this value or override get_log_message
-
-            If not set then, default log message is generated
       tags:
       - logout
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Logout'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Logout'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Logout'
+        required: true
       security:
       - jwtAuth: []
       - cookieAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Logout'
+          description: ''
   /permission_set/:
     post:
       operationId: permission_set_create
@@ -355,17 +360,6 @@ paths:
   /service_providers/:
     get:
       operationId: service_providers_list
-      description: |-
-        Mixin to track user actions
-
-        :cvar log_message:
-            Log message to populate remarks in LogAction
-
-            type --> str
-
-            set this value or override get_log_message
-
-            If not set then, default log message is generated
       parameters:
       - name: limit
         required: false
@@ -391,8 +385,116 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedServiceProviderList'
           description: ''
+  /service_providers/{id}/:
+    get:
+      operationId: service_providers_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - service_providers
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceProvider'
+          description: ''
+  /service_providers/{id}/status_toggle/:
+    put:
+      operationId: service_providers_status_toggle_update
+      description: |-
+        Mixin to track user actions
+
+        :cvar log_message:
+            Log message to populate remarks in LogAction
+
+            type --> str
+
+            set this value or override get_log_message
+
+            If not set then, default log message is generated
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - service_providers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceProvider'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ServiceProvider'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ServiceProvider'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceProvider'
+          description: ''
+    patch:
+      operationId: service_providers_status_toggle_partial_update
+      description: |-
+        Mixin to track user actions
+
+        :cvar log_message:
+            Log message to populate remarks in LogAction
+
+            type --> str
+
+            set this value or override get_log_message
+
+            If not set then, default log message is generated
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - service_providers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedServiceProvider'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedServiceProvider'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedServiceProvider'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceProvider'
+          description: ''
+  /service_providers/create/:
     post:
-      operationId: service_providers_create
+      operationId: service_providers_create_create
       description: |-
         Mixin to track user actions
 
@@ -428,9 +530,20 @@ paths:
               schema:
                 $ref: '#/components/schemas/ServiceProvider'
           description: ''
-  /service_providers/{id}/:
-    get:
-      operationId: service_providers_retrieve
+  /staff/{id}/reset/:
+    put:
+      operationId: staff_reset_update
+      description: |-
+        Mixin to track user actions
+
+        :cvar log_message:
+            Log message to populate remarks in LogAction
+
+            type --> str
+
+            set this value or override get_log_message
+
+            If not set then, default log message is generated
       parameters:
       - in: path
         name: id
@@ -438,7 +551,19 @@ paths:
           type: integer
         required: true
       tags:
-      - service_providers
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Staff'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Staff'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Staff'
+        required: true
       security:
       - jwtAuth: []
       - cookieAuth: []
@@ -447,7 +572,184 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ServiceProvider'
+                $ref: '#/components/schemas/Staff'
+          description: ''
+    patch:
+      operationId: staff_reset_partial_update
+      description: |-
+        Mixin to track user actions
+
+        :cvar log_message:
+            Log message to populate remarks in LogAction
+
+            type --> str
+
+            set this value or override get_log_message
+
+            If not set then, default log message is generated
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedStaff'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedStaff'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedStaff'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Staff'
+          description: ''
+  /staff/{id}/revoke/:
+    put:
+      operationId: staff_revoke_update
+      description: |-
+        Mixin to track user actions
+
+        :cvar log_message:
+            Log message to populate remarks in LogAction
+
+            type --> str
+
+            set this value or override get_log_message
+
+            If not set then, default log message is generated
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Staff'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Staff'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Staff'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Staff'
+          description: ''
+    patch:
+      operationId: staff_revoke_partial_update
+      description: |-
+        Mixin to track user actions
+
+        :cvar log_message:
+            Log message to populate remarks in LogAction
+
+            type --> str
+
+            set this value or override get_log_message
+
+            If not set then, default log message is generated
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedStaff'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedStaff'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedStaff'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Staff'
+          description: ''
+  /staff_permission/{id}/:
+    get:
+      operationId: staff_permission_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - staff_permission
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffPermission'
+          description: ''
+  /staff_permissions/:
+    get:
+      operationId: staff_permissions_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      tags:
+      - staff_permissions
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedStaffPermissionList'
           description: ''
   /staffs/:
     get:
@@ -618,6 +920,26 @@ components:
           format: email
       required:
       - email
+    Login:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          writeOnly: true
+      required:
+      - email
+      - password
+    Logout:
+      type: object
+      properties:
+        refresh:
+          type: string
+          writeOnly: true
+      required:
+      - refresh
     NullEnum:
       enum:
       - null
@@ -681,6 +1003,26 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Staff'
+    PaginatedStaffPermissionList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/StaffPermission'
     PatchedResetPassword:
       type: object
       properties:
@@ -692,6 +1034,103 @@ components:
           type: string
           writeOnly: true
           maxLength: 128
+    PatchedServiceProvider:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        url:
+          type: string
+          format: uri
+          readOnly: true
+        picture:
+          type: string
+          format: uri
+          readOnly: true
+        name:
+          type: string
+          maxLength: 150
+        date:
+          type: string
+          readOnly: true
+        website_url:
+          type: string
+          format: uri
+          maxLength: 200
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        toggle_status_url:
+          type: string
+          readOnly: true
+        staffs_with_permission:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+    PatchedStaff:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        url:
+          type: string
+          format: uri
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        first_name:
+          type: string
+          maxLength: 30
+        last_name:
+          type: string
+          maxLength: 30
+        phone_number:
+          type: string
+          maxLength: 128
+        tribe:
+          type: string
+          readOnly: true
+        squad:
+          type: string
+          readOnly: true
+        role:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        designation:
+          type: string
+          readOnly: true
+        full_designation:
+          type: string
+          readOnly: true
+        tribe_name:
+          type: string
+          writeOnly: true
+        squad_name:
+          type: string
+          writeOnly: true
+        designation_name:
+          type: string
+          writeOnly: true
+        reset_url:
+          type: string
+          readOnly: true
+        revoke_url:
+          type: string
+          readOnly: true
+        permissions:
+          type: string
+          readOnly: true
+        profile_picture:
+          type: string
+          format: uri
+          nullable: true
     ResetPassword:
       type: object
       properties:
@@ -741,6 +1180,9 @@ components:
         name:
           type: string
           maxLength: 150
+        date:
+          type: string
+          readOnly: true
         website_url:
           type: string
           format: uri
@@ -749,11 +1191,21 @@ components:
           type: string
           readOnly: true
           pattern: ^[-a-zA-Z0-9_]+$
+        toggle_status_url:
+          type: string
+          readOnly: true
+        staffs_with_permission:
+          type: object
+          additionalProperties: {}
+          readOnly: true
       required:
+      - date
       - id
       - name
       - picture
       - slug
+      - staffs_with_permission
+      - toggle_status_url
       - url
       - website_url
     Staff:
@@ -805,6 +1257,19 @@ components:
         designation_name:
           type: string
           writeOnly: true
+        reset_url:
+          type: string
+          readOnly: true
+        revoke_url:
+          type: string
+          readOnly: true
+        permissions:
+          type: string
+          readOnly: true
+        profile_picture:
+          type: string
+          format: uri
+          nullable: true
       required:
       - designation
       - designation_name
@@ -813,7 +1278,10 @@ components:
       - full_designation
       - id
       - last_name
+      - permissions
       - phone_number
+      - reset_url
+      - revoke_url
       - squad
       - squad_name
       - tribe
@@ -829,6 +1297,9 @@ components:
           type: string
           format: uri
           readOnly: true
+        name:
+          type: string
+          readOnly: true
         staff:
           type: string
           format: uri
@@ -841,14 +1312,21 @@ components:
           type: array
           items:
             type: integer
+            writeOnly: true
+          writeOnly: true
         sp_list:
           type: array
           items:
             type: integer
+            writeOnly: true
+          writeOnly: true
         is_permitted:
           type: boolean
+          readOnly: true
       required:
       - id
+      - is_permitted
+      - name
       - service_provider
       - sp_list
       - staff
@@ -862,26 +1340,6 @@ components:
       description: |-
         * `Success` - Success
         * `Failed` - Failed
-    TokenObtainPair:
-      type: object
-      properties:
-        email:
-          type: string
-          writeOnly: true
-        password:
-          type: string
-          writeOnly: true
-        access:
-          type: string
-          readOnly: true
-        refresh:
-          type: string
-          readOnly: true
-      required:
-      - access
-      - email
-      - password
-      - refresh
     TokenRefresh:
       type: object
       properties:

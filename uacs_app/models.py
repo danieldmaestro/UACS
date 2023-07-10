@@ -9,8 +9,8 @@ from django.utils.text import slugify
 from accounts.models import User
 from base.constants import (INTERN, ANALYST, HEAD, MANAGER, MANAGING_DIRECTOR, VP,
                              ASSOCIATE, UPDATED, CREATED, RESET, REVOKED, SUCCESS, ACTION_STATUS,
-                             LOGIN, LOGOUT)
-from base.models import BaseModel, BaseActivityLog
+                             )
+from base.models import BaseModel, BaseLog
 from phonenumber_field.modelfields import PhoneNumberField
 
 # Create your models here.
@@ -85,10 +85,6 @@ class ServiceProvider(BaseModel):
     picture = models.ImageField(upload_to='sp_picture/', blank=True, null=True)
     website_url = models.URLField()
     slug = models.SlugField(blank=True, null=True)
-    is_active = models.BooleanField(default=True)
-
-    class Meta:
-        ordering = ['-created_date']
 
     def __str__(self) -> str:
         return self.name
@@ -103,24 +99,8 @@ class StaffPermission(models.Model):
         return f"{self.service_provider.name}({self.staff.first_name})"
 
 
-ACTION_CHOICES = (
-        (UPDATED, UPDATED),
-        (RESET, RESET),
-        (REVOKED, REVOKED),
-        (CREATED, CREATED),
-        (LOGIN, LOGIN),
-        (LOGOUT, LOGOUT),
-    )
 
-
-class ActivityLog(models.Model):
-    actor = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
-    action_type = models.CharField(choices=ACTION_CHOICES, max_length=15)
-    action_time = models.DateTimeField(auto_now_add=True)
-    remarks = models.TextField(blank=True, null=True)
-    status = models.CharField(choices=ACTION_STATUS, max_length=7, default=SUCCESS)
-    data = models.JSONField(default=dict)
-
+class ActivityLog(BaseLog):
     # for generic relations
     content_type = models.ForeignKey(
         ContentType, models.SET_NULL, blank=True, null=True
@@ -134,15 +114,14 @@ class ActivityLog(models.Model):
     def __str__(self) -> str:
         return f"{self.action_type} by {self.actor} on {self.action_time}"
 
-    def get_activity(self):
-        if self.action_type == UPDATED:
-            return f"{self.action_type} {self.content_object.staff.full_name()}'s permission for {self.content_object.service_provider.name}"
-        elif self.action_type == REVOKED:
-            return f"{self.action_type} access for {self.content_object.full_name()}"
-        elif self.action_type == RESET:
-            return f"{self.action_type} access for {self.content_object.full_name()}"
-        elif self.action_type == CREATED:
-            return f"{self.action_type} a service provider"
+
+class SecurityLog(BaseLog):
+
+    class Meta:
+        ordering = ['-action_time'] 
+
+    def __str__(self) -> str:
+        return f"{self.action_type} by {self.actor} on {self.action_time}"
 
     
     

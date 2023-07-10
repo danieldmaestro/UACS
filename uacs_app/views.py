@@ -10,13 +10,14 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
+from . import signals
 from accounts.models import User
 from base.constants import UPDATED, CREATED, REVOKED, RESET, LOGIN, LOGOUT, LOGIN_FAILED, SUCCESS, FAILED
 from .mixins import ActivityLogMixin
-from .models import ActivityLog, Staff, Tribe, Squad, Designation, ServiceProvider, StaffPermission
+from .models import ActivityLog, Staff, Tribe, Squad, Designation, ServiceProvider, StaffPermission, SecurityLog
 from .serializers import (StaffSerializer,ServiceProviderSerializer, StaffPermissionSerializer,
                             ActivityLogSerializer, EmailOTPSerializer, ResetPasswordSerializer,
-                            VerifyOTPSerializer, LoginSerializer, LogoutSerializer)
+                            VerifyOTPSerializer, LoginSerializer, LogoutSerializer, SecurityLogSerializer)
 from .tasks import send_otp_mail
 from .utils import create_permissions
 
@@ -37,13 +38,14 @@ class LoginAPIView(TokenObtainPairView):
 class LogoutAPIView(generics.GenericAPIView):
     serializer_class = LogoutSerializer
     
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         request.data['action'] = LOGOUT
         serializer = self.get_serializer_class()(data=request.data)
         serializer.is_valid(raise_exception=True)
         refresh = serializer.validated_data['refresh']
         token = RefreshToken(refresh)
         token.blacklist()
+        signals.user_logged_out.send(sender=User, request=self.request, user=self.request.user)
         return Response({"message": "Logged out successfully"}, status=status.HTTP_205_RESET_CONTENT)     
         
 
@@ -105,7 +107,7 @@ class StaffAccessRevokeAPIView(ActivityLogMixin, generics.UpdateAPIView):
         return Response({'message': 'Staff access is already revoked.'}, status=status.HTTP_400_BAD_REQUEST)
         
 
-class ServiceProviderListCreateAPIView(ActivityLogMixin, generics.ListCreateAPIView):
+class ServiceProviderCreateAPIView(ActivityLogMixin, generics.CreateAPIView):
     serializer_class = ServiceProviderSerializer
     permission_classes = [IsAuthenticated]
     queryset = ServiceProvider.objects.all()
@@ -117,9 +119,14 @@ class ServiceProviderListCreateAPIView(ActivityLogMixin, generics.ListCreateAPIV
             StaffPermission.objects.create(staff=staff, service_provider=service_provider)
 
         return Response({'message': 'Service Provider created succesfully'}, status=status.HTTP_201_CREATED)
-    
-    
 
+
+class ServiceProviderListAPIView(generics.ListAPIView):
+    serializer_class = ServiceProviderSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = ServiceProvider.objects.all()
+
+    
 class ServiceProviderToggleStatusAPIView(ActivityLogMixin, generics.UpdateAPIView):
     serializer_class = ServiceProviderSerializer
     permission_classes = [IsAuthenticated]
@@ -147,8 +154,16 @@ class ActivityLogListAPIView(generics.ListAPIView):
 
 
 class ActivityLogDetailAPIView(generics.RetrieveAPIView):
+
+    """Endpoint for list of Security Logs"""
     queryset = ActivityLog.objects.all()
     serializer_class = ActivityLogSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class SecurityLogListAPIView(generics.ListAPIView):
+    queryset = SecurityLog.objects.all()
+    serializer_class = SecurityLogSerializer
     permission_classes = [IsAuthenticated]
 
 
@@ -220,6 +235,16 @@ class ResetPasswordAPIView(generics.UpdateAPIView):
         user.set_password(password)
         return Response({'message': 'Password updated successfully'}, status=status.HTTP_202_ACCEPTED)
     
+
+class DashboardCountAPIView(generics.GenericAPIView):
+    def get(self, request, *args, **kwargs):
+        inactive_sp = ServiceProvider.objects.filter(is_active=False).count()
+        active_staff = Staff.objects.filter(is_active=True).count()
+
+        response = {'inactive_sps': inactive_sp,
+                    'staff_with_access': active_staff}
+        return Response(response, status=status.HTTP_200_OK)
+
 
 class StaffPermissionSetAPIView(generics.GenericAPIView):
 

@@ -6,8 +6,8 @@ from rest_framework.reverse import reverse
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from base.constants import UPDATED, CREATED, REVOKED, RESET, LOGIN, LOGIN_FAILED, SUCCESS, FAILED
-from .models import Staff, StaffPermission, ServiceProvider, ActivityLog, Admin
+from base.constants import UPDATED, CREATED, REVOKED, RESET, LOGIN, LOGIN_FAILED, LOGOUT, SUCCESS, FAILED
+from .models import Staff, StaffPermission, ServiceProvider, ActivityLog, Admin, SecurityLog
 from uacs_app import signals
 
 User = get_user_model()
@@ -26,13 +26,13 @@ class LoginSerializer(serializers.Serializer):
         email = attrs.get('email')
         password = attrs.get('password')
         admin = Admin.objects.get(user__email=email)
+        request = self.context.get('request')
         
         if not admin or not admin.user.check_password(password):
             credentials = {'email': email}
-            signals.user_login_failed.send(sender=User, credentials=credentials, request=request)
+            signals.user_login_failed.send(sender=User, credentials=credentials, request=request, status=FAILED)
             raise serializers.ValidationError('Invalid login credentials or not a verified user')
         
-        request = self.context.get('request')
         access, refresh = self.get_token(admin.user)
         
         payload = {
@@ -152,11 +152,11 @@ class ActivityLogSerializer(serializers.ModelSerializer):
     activity = serializers.SerializerMethodField()
     date = serializers.SerializerMethodField()
     time = serializers.SerializerMethodField()
+    actor_name = serializers.SerializerMethodField()
 
     class Meta:
         model = ActivityLog
-        fields = ['id', 'actor', 'action_time', 'date', 'time', 'status', 'activity']
-        extra_kwargs = {'url': {'view_name': 'uacs:activitylog-detail'}}
+        fields = ['id', 'actor', 'actor_name', 'action_time', 'date', 'time', 'status', 'activity']
 
 
     def get_activity(self, obj) -> str:
@@ -175,10 +175,41 @@ class ActivityLogSerializer(serializers.ModelSerializer):
             return f"Attempted login by {remark_list[0]}"
         
     def get_date(self, obj) -> str:
-        return obj.action_time.date()
+        return obj.action_time.date().isoformat()
     
     def get_time(self, obj) -> str:
-        return obj.action_time.time()
+        return obj.action_time.time().isoformat()
+    
+    def get_actor_name(self, obj) -> str:
+        if hasattr(obj.actor, 'admin'):
+            return obj.actor.admin.full_name()
+        return obj.actor.email
+    
+    
+class SecurityLogSerializer(serializers.ModelSerializer):
+    actor = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    activity = serializers.SerializerMethodField()
+    date = serializers.SerializerMethodField()
+    time = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SecurityLog
+        fields = ['id', 'actor', 'action_time', 'date', 'time', 'status', 'activity']
+
+    def get_activity(self, obj) -> str:
+        if obj.action_type == LOGIN:
+            return f"Attempted login by {obj.actor.email}"
+        elif obj.action_type == LOGIN_FAILED:
+            remark_list = [item.strip() for item in obj.remark.split(",")]
+            return f"Attempted login by {remark_list[0]}"
+        elif obj.action_type == LOGOUT:
+            return f"{obj.actor.email} successfully logged out."
+        
+    def get_date(self, obj) -> str:
+        return obj.action_time.date().isoformat()
+    
+    def get_time(self, obj) -> str:
+        return obj.action_time.time().isoformat()
         
 
 class EmailOTPSerializer(serializers.Serializer):
