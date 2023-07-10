@@ -6,11 +6,11 @@ from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 from django.utils.text import slugify
 
+from accounts.models import User
 from base.constants import (INTERN, ANALYST, HEAD, MANAGER, MANAGING_DIRECTOR, VP,
                              ASSOCIATE, UPDATED, CREATED, RESET, REVOKED, SUCCESS, ACTION_STATUS,
                              LOGIN, LOGOUT)
 from base.models import BaseModel, BaseActivityLog
-from accounts.models import User
 from phonenumber_field.modelfields import PhoneNumberField
 
 # Create your models here.
@@ -86,6 +86,9 @@ class ServiceProvider(BaseModel):
     website_url = models.URLField()
     slug = models.SlugField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['-created_date']
 
     def __str__(self) -> str:
         return self.name

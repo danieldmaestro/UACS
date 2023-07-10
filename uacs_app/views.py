@@ -35,7 +35,6 @@ class LoginAPIView(TokenObtainPairView):
     
 
 class LogoutAPIView(generics.GenericAPIView):
-
     serializer_class = LogoutSerializer
     
     def post(self, request):
@@ -45,8 +44,7 @@ class LogoutAPIView(generics.GenericAPIView):
         refresh = serializer.validated_data['refresh']
         token = RefreshToken(refresh)
         token.blacklist()
-        return Response({"message": "Logged out successfully"}, status=status.HTTP_205_RESET_CONTENT)
-       
+        return Response({"message": "Logged out successfully"}, status=status.HTTP_205_RESET_CONTENT)     
         
 
 class StaffListCreateAPIView(generics.ListCreateAPIView):
@@ -119,6 +117,7 @@ class ServiceProviderListCreateAPIView(ActivityLogMixin, generics.ListCreateAPIV
             StaffPermission.objects.create(staff=staff, service_provider=service_provider)
 
         return Response({'message': 'Service Provider created succesfully'}, status=status.HTTP_201_CREATED)
+    
     
 
 class ServiceProviderToggleStatusAPIView(ActivityLogMixin, generics.UpdateAPIView):

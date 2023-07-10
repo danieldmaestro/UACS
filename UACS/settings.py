@@ -20,7 +20,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 TEMPLATE_DIR = BASE_DIR / 'templates'
 
 
-
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -55,15 +54,15 @@ INSTALLED_APPS = [
     'corsheaders',
 
 
-    'accounts',
     'rest_framework',
-    'uacs_app',
-    "phonenumber_field",
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
+    "phonenumber_field",
     'django_celery_results',
     'drf_spectacular',
 
+    'accounts',
+    'uacs_app',
 ]
 
 MIDDLEWARE = [

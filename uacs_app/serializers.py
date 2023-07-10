@@ -56,9 +56,8 @@ class LogoutSerializer(serializers.Serializer):
             token = RefreshToken(refresh)
             return {'refresh': refresh}
         except TokenError:
-            raise serializers.ValidationError('Invalid Refresh Token')
-        
-    
+            raise serializers.ValidationError('Invalid Refresh Token')    
+
 
 class StaffPermissionSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name="uacs:staff_permission_detail", read_only=True)
@@ -68,7 +67,6 @@ class StaffPermissionSerializer(serializers.HyperlinkedModelSerializer):
     service_provider = serializers.HyperlinkedRelatedField(view_name="uacs:sp_detail", read_only=True)
     name = serializers.SerializerMethodField()
     
-
     class Meta:
         model = StaffPermission
         fields = ['id', 'url', 'name','staff', 'service_provider', 'staff_list', 'sp_list', 'is_permitted']
@@ -76,7 +74,6 @@ class StaffPermissionSerializer(serializers.HyperlinkedModelSerializer):
 
     def get_name(self, obj) -> str:
         return obj.service_provider.name
-
 
 
 class StaffSerializer(serializers.HyperlinkedModelSerializer):
@@ -97,7 +94,6 @@ class StaffSerializer(serializers.HyperlinkedModelSerializer):
         fields = ['id', 'url', 'email', 'first_name', 'last_name', 'phone_number', 'tribe', 'squad', 'role', 
                   'designation', 'full_designation', 'tribe_name', 'squad_name', 'designation_name', 
                   'reset_url', 'revoke_url', 'permissions', 'profile_picture']
-
     
     def get_full_designation(self,obj) -> str:
         return f"{obj.role}, {obj.designation}"
@@ -149,7 +145,6 @@ class ServiceProviderSerializer(serializers.HyperlinkedModelSerializer):
         if request is not None:
             return reverse('uacs:sp_toggle_status', args=[obj.id], request=request)
         return None
-
 
 
 class ActivityLogSerializer(serializers.ModelSerializer):
@@ -213,6 +208,8 @@ class ResetPasswordSerializer(serializers.ModelSerializer):
         return attrs
 
 
+class StaffModifySerializer(serializers.Serializer):
+    pass
 
 
 
