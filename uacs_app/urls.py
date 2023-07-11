@@ -6,7 +6,8 @@ from .views import (ActivityLogListAPIView, ServiceProviderCreateAPIView, StaffL
                     ServiceProviderDetailAPIView, ActivityLogDetailAPIView, VerifyOTPAPIView,
                     StaffPermissionSetAPIView, StaffAccessResetAPIView, StaffAccessRevokeAPIView,
                     StaffPermissionDetailAPIView, StaffPermissionListAPIView, ServiceProviderToggleStatusAPIView,
-                    LoginAPIView, ServiceProviderListAPIView, SecurityLogListAPIView, DashboardCountAPIView)
+                    LoginAPIView, ServiceProviderListAPIView, SecurityLogListAPIView, DashboardCountAPIView,
+                    StaffPermissionUpdateAPIView)
 
 app_name = 'uacs'
 
@@ -32,5 +33,6 @@ urlpatterns = [
     path('permission_set/', StaffPermissionSetAPIView.as_view(), name="set_permission"),
     path('staff_permission/<int:pk>/', StaffPermissionDetailAPIView.as_view(), name="staff_permission_detail"),
     path('staff_permissions/', StaffPermissionListAPIView.as_view(), name="staff_permission_list"),
+    path('staff_permissions/update/', StaffPermissionUpdateAPIView.as_view(), name="staff_permission_update"),
     path('count/', DashboardCountAPIView.as_view(), name="dashboard_count"),
 ]

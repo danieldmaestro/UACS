@@ -1,6 +1,7 @@
 import random
 from django.conf import settings
 from django.core.mail import send_mail
+from django.db.models import Q
 from django.shortcuts import render, get_object_or_404
 
 from rest_framework import generics
@@ -17,7 +18,9 @@ from .mixins import ActivityLogMixin
 from .models import ActivityLog, Staff, Tribe, Squad, Designation, ServiceProvider, StaffPermission, SecurityLog
 from .serializers import (StaffSerializer,ServiceProviderSerializer, StaffPermissionSerializer,
                             ActivityLogSerializer, EmailOTPSerializer, ResetPasswordSerializer,
-                            VerifyOTPSerializer, LoginSerializer, LogoutSerializer, SecurityLogSerializer)
+                            VerifyOTPSerializer, LoginSerializer, LogoutSerializer, SecurityLogSerializer,
+                            PermissionUpdateSerializer)
+from .signals import permission_updated
 from .tasks import send_otp_mail
 from .utils import create_permissions
 
@@ -28,6 +31,7 @@ def generate_otp():
     return str(random.randint(100000, 999999))
 
 class LoginAPIView(TokenObtainPairView):
+    """Endpoint to get authenticate user"""
     serializer_class = LoginSerializer
 
     def post(self, request, *args, **kwargs):
@@ -36,6 +40,7 @@ class LoginAPIView(TokenObtainPairView):
     
 
 class LogoutAPIView(generics.GenericAPIView):
+    """Endpoint to unauthenticate the authenticated user and blacklist access token"""
     serializer_class = LogoutSerializer
     
     def post(self, request, *args, **kwargs):
@@ -50,6 +55,7 @@ class LogoutAPIView(generics.GenericAPIView):
         
 
 class StaffListCreateAPIView(generics.ListCreateAPIView):
+    """Endpoint to create and new Staff and get list of staffs in the database"""
     serializer_class = StaffSerializer
     permission_classes = [IsAuthenticated]
     queryset = Staff.objects.all()
@@ -58,6 +64,18 @@ class StaffListCreateAPIView(generics.ListCreateAPIView):
         context = super().get_serializer_context()
         context['request'] = self.request
         return context
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        search_query = self.request.query_params.get('search_query')
+        if search_query:
+            # Apply search filter using Q objects
+            queryset = queryset.filter(
+                Q(first_name__icontains=search_query) |
+                Q(last_name__icontains=search_query) |
+                Q(email__icontains=search_query)
+            )
+        return queryset
     
     def perform_create(self, serializer):
         tribe_name = serializer.validated_data.pop('tribe_name')
@@ -74,12 +92,14 @@ class StaffListCreateAPIView(generics.ListCreateAPIView):
     
 
 class StaffDetailAPIView(generics.RetrieveAPIView):
+    """Endpoint to get individual staff information"""
     serializer_class = StaffSerializer
     queryset = Staff.objects.all()
     permission_classes = [IsAuthenticated]
 
 
 class StaffAccessResetAPIView(ActivityLogMixin, generics.UpdateAPIView):
+    """Endpoint to restore staff active and allow all previously granted permissions"""
     queryset = Staff.objects.all()
     serializer_class = StaffSerializer
 
@@ -94,6 +114,7 @@ class StaffAccessResetAPIView(ActivityLogMixin, generics.UpdateAPIView):
         
     
 class StaffAccessRevokeAPIView(ActivityLogMixin, generics.UpdateAPIView):
+    """Endpoint to revoke all staff access permissions and make staff inactive"""
     queryset = Staff.objects.all()
     serializer_class = StaffSerializer
 
@@ -108,6 +129,7 @@ class StaffAccessRevokeAPIView(ActivityLogMixin, generics.UpdateAPIView):
         
 
 class ServiceProviderCreateAPIView(ActivityLogMixin, generics.CreateAPIView):
+    """"""
     serializer_class = ServiceProviderSerializer
     permission_classes = [IsAuthenticated]
     queryset = ServiceProvider.objects.all()
@@ -126,6 +148,16 @@ class ServiceProviderListAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     queryset = ServiceProvider.objects.all()
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        search_query = self.request.query_params.get('search_query')
+        if search_query:
+            # Apply search filter using Q objects
+            queryset = queryset.filter(
+                Q(name__icontains=search_query)
+            )
+        return queryset
+    
     
 class ServiceProviderToggleStatusAPIView(ActivityLogMixin, generics.UpdateAPIView):
     serializer_class = ServiceProviderSerializer
@@ -255,16 +287,19 @@ class StaffPermissionSetAPIView(generics.GenericAPIView):
         return super().get_serializer(*args, **kwargs)
     
     def post(self, request, *args, **kwargs):
+        user = request.user
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         staff_list = serializer.validated_data.pop("staff_list")
         sp_list = serializer.validated_data.pop("sp_list")
-        sp_object_list = [get_object_or_404(ServiceProvider, id=sp_id) for sp_id in sp_list]
 
-        for staff_id in staff_list:
-            staff = get_object_or_404(Staff, id=staff_id)
-            staff.sp_permissions.filter(service_provider__in=sp_object_list).values_list("is_permitted", flat=True).update(is_permitted=True)
-        
+        for staff in staff_list:
+            staff_permissions = staff.sp_permissions.filter(service_provider__in=sp_list)
+
+            for permission in staff_permissions:
+                permission.is_permitted = True
+                permission.save()
+                permission_updated.send(sender=StaffPermission, user=user, action_type=UPDATED, content_object=permission)
         return Response({'message': 'Permission granted for selected staff and service providers'}, status=status.HTTP_201_CREATED)
 
 
@@ -279,69 +314,46 @@ class StaffPermissionListAPIView(generics.ListAPIView):
     queryset = StaffPermission.objects.all()
 
     
-class StaffPermissionUpdateAPIView(generics.UpdateAPIView):
-    pass
+class StaffPermissionUpdateAPIView(generics.GenericAPIView):
+    serializer_class = PermissionUpdateSerializer
+    queryset = StaffPermission.objects.all()
+    permission_classes = [IsAuthenticated]
 
-
-
-    # def update(self, request, *args, **kwargs):
-    #     partial = kwargs.pop('partial', False)
-    #     instance = self.get_object()
-    #     if instance is None:
-    #         return Response({'message': 'Verification code'}, status=status.HTTP_400_BAD_REQUEST)
-    #     serializer = self.get_serializer(instance, data=request.data, partial=partial)
-    #     serializer.is_valid(raise_exception=True)
-    #     self.perform_update(serializer)
-    #     if getattr(instance, '_prefetched_objects_cache', None):
-    #         instance._prefetched_objects_cache = {}
-    #     return Response({'message': 'Password updated successfully'}, status=status.HTTP_202_ACCEPTED)
-
-    # def perform_update(self, serializer):
-    #     serializer.save()
-
-       
-
-# class VerifyOTPAPIView(generics.UpdateAPIView):
-#     serializer_class = VerifyOTPSerializer
-#     queryset = User.objects.all()
-
-#     def get_object(self):
-#         email = self.request.data.get('email')
-#         try:
-#             user = self.queryset.filter(email=email).get()
-#         except self.model.DoesNotExist:
-#             user = None
-#         return user
+    def get_serializer(self, *args, **kwargs):
+        return super().get_serializer(*args, **kwargs)
     
-#     def perform_update(self, serializer):
-#         user = self.get_object()
-#         otp_code = serializer.validated_data['otp_code']
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        permission_list = serializer.validated_data.pop("permission_list")
+        permission_ids = [obj.pk for obj in permission_list]
+        staff = permission_list[0].staff
+        staff_permissions = staff.sp_permissions.all()
 
-#         if user.verification_code == otp_code:
-#             user.verification_code = ""
-#             user.save()
-#             return Response({'message': 'Verification code is valid.'}, status=status.HTTP_200_OK)
-#         return Response({'message': 'Verification code is invalid.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not staff_permissions.filter(pk__in=permission_ids).count() == len(permission_ids):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         
+        perm_true = staff_permissions.filter(pk__in=permission_ids)
+        perm_false = staff_permissions.exclude(pk__in=permission_ids)
 
-# class EmailOTPAPIView(generics.CreateAPIView):
-#     serializer_class = EmailOTPSerializer
+        for perm in perm_true:
+            if perm.is_permitted == False:
+                perm.is_permitted = True
+                perm.save()
+                permission_updated.send(sender=StaffPermission, user=user, action_type=UPDATED, content_object=perm)
+                print("true loop ran")
 
-#     def perform_create(self, serializer):
-#         email = serializer.validated_data['email']
-#         try:
-#             user = User.objects.filter(email=email).get()
-#             otp = generate_otp()
-#             user.verification_code = otp
-#             # Send the OTP code to the provided email
-#             subject='OTP Code'
-#             message = f'Your OTP code is: {otp}'
-#             send_otp_mail.delay(subject=subject, recipient=[email], message=message,)
-#             return Response({'message': 'OTP sent successfully.'}, status=status.HTTP_200_OK)
-#         except User.DoesNotExist:
-#             return Response({'message': 'No staff with this email is registered.'}, status=status.HTTP_400_BAD_REQUEST)
+        for perm in perm_false:
+            if perm.is_permitted == True:
+                perm.is_permitted = False
+                perm.save()
+                permission_updated.send(sender=StaffPermission, user=user, action_type=UPDATED, content_object=perm)
+                print("false loop ran")
+                
 
-
-
+        # staff_permissions.filter(pk__in=permission_ids).values_list("is_permitted", flat=True).update(is_permitted=True)
+        # staff_permissions.exclude(pk__in=permission_ids).values_list("is_permitted", flat=True).update(is_permitted=False)
+        return Response({'message': f'Permissions for {staff.full_name()} updated successfully.'}, status=status.HTTP_201_CREATED)
 
 

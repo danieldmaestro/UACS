@@ -48,6 +48,7 @@ class LoginSerializer(serializers.Serializer):
     
 
 class LogoutSerializer(serializers.Serializer):
+
     refresh = serializers.CharField(write_only=True)
 
     def validate(self, attrs):
@@ -76,6 +77,13 @@ class StaffPermissionSerializer(serializers.HyperlinkedModelSerializer):
         return obj.service_provider.name
 
 
+class PermissionUpdateSerializer(serializers.Serializer):
+    
+    permission_list = serializers.PrimaryKeyRelatedField(queryset=StaffPermission.objects.all(), many=True, write_only=True)
+
+    def validate(self, attrs):
+        return super().validate(attrs)
+
 class StaffSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name="uacs:staff_detail", read_only=True)
     full_designation = serializers.SerializerMethodField()
@@ -87,13 +95,14 @@ class StaffSerializer(serializers.HyperlinkedModelSerializer):
     designation_name = serializers.CharField(write_only=True)
     reset_url = serializers.SerializerMethodField()
     revoke_url = serializers.SerializerMethodField()
+    permission_update_url = serializers.SerializerMethodField()
     permissions = serializers.SerializerMethodField()
 
     class Meta:
         model = Staff
         fields = ['id', 'url', 'email', 'first_name', 'last_name', 'phone_number', 'tribe', 'squad', 'role', 
                   'designation', 'full_designation', 'tribe_name', 'squad_name', 'designation_name', 
-                  'reset_url', 'revoke_url', 'permissions', 'profile_picture']
+                  'reset_url', 'revoke_url', 'permissions', 'profile_picture', 'permission_update_url']
     
     def get_full_designation(self,obj) -> str:
         return f"{obj.role}, {obj.designation}"
@@ -115,6 +124,12 @@ class StaffSerializer(serializers.HyperlinkedModelSerializer):
         request = self.context.get('request')
         if request is not None:
             return StaffPermissionSerializer(permissions, many=True, context={'request': request}).data
+        return None
+    
+    def get_permission_update_url(self,obj) -> str:
+        request = self.context.get('request')
+        if request is not None:
+            return reverse('uacs:staff_permission_update', request=request)
         return None
 
 

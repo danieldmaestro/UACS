@@ -1,3 +1,5 @@
+import threading
+
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -14,6 +16,12 @@ from base.models import BaseModel, BaseLog
 from phonenumber_field.modelfields import PhoneNumberField
 
 # Create your models here.
+
+thread_local = threading.local()
+
+def set_request(request):
+    thread_local.request = request
+
 
 class Tribe(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -99,7 +107,6 @@ class StaffPermission(models.Model):
         return f"{self.service_provider.name}({self.staff.first_name})"
 
 
-
 class ActivityLog(BaseLog):
     # for generic relations
     content_type = models.ForeignKey(
@@ -124,42 +131,8 @@ class SecurityLog(BaseLog):
         return f"{self.action_type} by {self.actor} on {self.action_time}"
 
     
-    
-
-# class StaffActivityLog(BaseActivityLog):
-
-#     ACTION_CHOICES = (
-#         (UPDATED, UPDATED),
-#         (RESET, RESET),
-#         (REVOKED, REVOKED),
-#         (CREATED, CREATED),
-#     )
-
-#     action = models.CharField(max_length=20, choices=ACTION_CHOICES)
-#     permission = models.ForeignKey(StaffPermission, on_delete=models.SET_NULL, null=True, related_name="staff_activity")
-
-#     def get_activity(self):
-#         if self.action == UPDATED:
-
-#         elif self.action == REVOKED:
-#             return f"{self.action} access for {self.permission.staff.full_name()}"
-#         return f"{self.action} access for {self.permission.staff.full_name()}"
-    
-# class ServiceProviderActivityLog(BaseActivityLog):
-
-#     ACTION_CHOICES = (
-#         (UPDATED, UPDATED),
-#         (CREATED, CREATED),
-#     )
-
-#     action = models.CharField(max_length=20, choices=ACTION_CHOICES)
-#     service_provider = models.CharField(max_length=100)
-
-#     def get_activity(self):
-#         return f"{self.action} a service provider, {self.service_provider}"
-
-    
 @receiver(pre_save, sender=ServiceProvider)
 def slugify_name(sender, instance, **kwargs):
     instance.slug = slugify(instance.name)
+
 

@@ -12,14 +12,8 @@ from base.constants import UPDATED, CREATED, REVOKED, RESET, LOGIN, LOGOUT, LOGI
 class ActivityLogMixin:
     """
     Mixin to track user actions
-
     :cvar log_message:
         Log message to populate remarks in LogAction
-
-        type --> str
-
-        set this value or override get_log_message
-
         If not set then, default log message is generated
     """
 
@@ -32,13 +26,14 @@ class ActivityLogMixin:
                 return REVOKED
             elif action == RESET:
                 return RESET
-            elif action == UPDATED:
-                return UPDATED
+            
         elif request.method.upper() == "POST":
             if action == LOGIN:
                 return LOGIN
             elif action == LOGOUT:
                 return LOGOUT
+            elif action == UPDATED:
+                return UPDATED
             elif action == LOGIN_FAILED:
                 return LOGIN_FAILED
             return CREATED
@@ -68,6 +63,7 @@ class ActivityLogMixin:
             data["content_type"] = ContentType.objects.get_for_model(
                 self.get_queryset().model
             )
+            print(data["content_type"])
             data["content_object"] = self.created_sp if self.created_sp else self.get_object()
             print(data["content_object"])
             data["object_id"] = self.created_sp.id if self.created_sp else self.get_object().id

@@ -99,9 +99,6 @@ WSGI_APPLICATION = 'UACS.wsgi.application'
 
 CSRF_TRUSTED_ORIGINS = ['https://uacs.onrender.com',]
 
-
-
-
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
