@@ -4,8 +4,7 @@ from django.core.mail import send_mail
 from django.db.models import Q
 from django.shortcuts import render, get_object_or_404
 
-from rest_framework import generics
-from rest_framework import status
+from rest_framework import filters, generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -54,28 +53,32 @@ class LogoutAPIView(generics.GenericAPIView):
         return Response({"message": "Logged out successfully"}, status=status.HTTP_205_RESET_CONTENT)     
         
 
+class ActiveStaffListAPIView(generics.ListAPIView):
+    """Endpoint to create and new Staff and get list of staffs in the database"""
+    serializer_class = StaffSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['first_name', 'last_name']
+    queryset = Staff.active_objects.all()
+
+    def get_serializer_context(self) -> dict:
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
+
 class StaffListCreateAPIView(generics.ListCreateAPIView):
     """Endpoint to create and new Staff and get list of staffs in the database"""
     serializer_class = StaffSerializer
     permission_classes = [IsAuthenticated]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['first_name', 'last_name']
     queryset = Staff.objects.all()
 
     def get_serializer_context(self) -> dict:
         context = super().get_serializer_context()
         context['request'] = self.request
         return context
-    
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        search_query = self.request.query_params.get('search_query')
-        if search_query:
-            # Apply search filter using Q objects
-            queryset = queryset.filter(
-                Q(first_name__icontains=search_query) |
-                Q(last_name__icontains=search_query) |
-                Q(email__icontains=search_query)
-            )
-        return queryset
     
     def perform_create(self, serializer):
         tribe_name = serializer.validated_data.pop('tribe_name')
@@ -129,7 +132,7 @@ class StaffAccessRevokeAPIView(ActivityLogMixin, generics.UpdateAPIView):
         
 
 class ServiceProviderCreateAPIView(ActivityLogMixin, generics.CreateAPIView):
-    """"""
+    """Endpoint to create a new Service Provider"""
     serializer_class = ServiceProviderSerializer
     permission_classes = [IsAuthenticated]
     queryset = ServiceProvider.objects.all()
@@ -144,24 +147,24 @@ class ServiceProviderCreateAPIView(ActivityLogMixin, generics.CreateAPIView):
 
 
 class ServiceProviderListAPIView(generics.ListAPIView):
+    """Endpoint to get list of all Service Providers"""
     serializer_class = ServiceProviderSerializer
-    permission_classes = [IsAuthenticated]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name',]
     queryset = ServiceProvider.objects.all()
 
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        search_query = self.request.query_params.get('search_query')
-        if search_query:
-            # Apply search filter using Q objects
-            queryset = queryset.filter(
-                Q(name__icontains=search_query)
-            )
-        return queryset
+
+class ActiveServiceProviderListAPIView(generics.ListAPIView):
+    """Endpoint to get list of all active Service Providers"""
+    serializer_class = ServiceProviderSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name',]
+    queryset = ServiceProvider.active_objects.all()
     
     
 class ServiceProviderToggleStatusAPIView(ActivityLogMixin, generics.UpdateAPIView):
+    """Endpoint to toggle active status for Service Provider"""
     serializer_class = ServiceProviderSerializer
-    permission_classes = [IsAuthenticated]
     queryset = ServiceProvider.objects.all()
 
     def patch(self, request, *args, **kwargs):
@@ -174,32 +177,35 @@ class ServiceProviderToggleStatusAPIView(ActivityLogMixin, generics.UpdateAPIVie
     
         
 class ServiceProviderDetailAPIView(generics.RetrieveAPIView):
+    """Endpoint to get details of a single service provider"""
     serializer_class = ServiceProviderSerializer
     queryset = ServiceProvider.objects.all()
-    permission_classes = [IsAuthenticated]
 
 
 class ActivityLogListAPIView(generics.ListAPIView):
+    """Endpoint to get list of of all activity logs"""
     queryset = ActivityLog.objects.all()
     serializer_class = ActivityLogSerializer
-    permission_classes = [IsAuthenticated]
 
 
 class ActivityLogDetailAPIView(generics.RetrieveAPIView):
 
-    """Endpoint for list of Security Logs"""
+    """Endpoint for detail of each Activity Log"""
     queryset = ActivityLog.objects.all()
     serializer_class = ActivityLogSerializer
     permission_classes = [IsAuthenticated]
 
 
 class SecurityLogListAPIView(generics.ListAPIView):
+    """Endpoint for list of Security Logs"""
     queryset = SecurityLog.objects.all()
     serializer_class = SecurityLogSerializer
     permission_classes = [IsAuthenticated]
 
 
 class EmailOTPAPIView(generics.GenericAPIView):
+    """Endpoint to send 6 digit passcode through to reset password"""
+
     serializer_class = EmailOTPSerializer
 
     def post(self, request, *args, **kwargs):
@@ -223,6 +229,7 @@ class EmailOTPAPIView(generics.GenericAPIView):
  
 
 class VerifyOTPAPIView(generics.GenericAPIView):
+    """Endpoint to verify the OTP for the user"""
     queryset = User.objects.all()
     serializer_class = VerifyOTPSerializer
 
@@ -248,6 +255,7 @@ class VerifyOTPAPIView(generics.GenericAPIView):
 
 
 class ResetPasswordAPIView(generics.UpdateAPIView):
+    """Endpoint to reset password"""
     serializer_class = ResetPasswordSerializer
     queryset = User.objects.all()
 
@@ -269,6 +277,7 @@ class ResetPasswordAPIView(generics.UpdateAPIView):
     
 
 class DashboardCountAPIView(generics.GenericAPIView):
+    """Custom endpoint to populate count fields on dashboard"""
     def get(self, request, *args, **kwargs):
         inactive_sp = ServiceProvider.objects.filter(is_active=False).count()
         active_staff = Staff.objects.filter(is_active=True).count()
@@ -279,6 +288,7 @@ class DashboardCountAPIView(generics.GenericAPIView):
 
 
 class StaffPermissionSetAPIView(generics.GenericAPIView):
+    """Endpoint to set multiple permissions for multiple staffs"""
 
     serializer_class = StaffPermissionSerializer
     permission_classes = [IsAuthenticated]
@@ -304,17 +314,20 @@ class StaffPermissionSetAPIView(generics.GenericAPIView):
 
 
 class StaffPermissionDetailAPIView(generics.RetrieveAPIView):
+    """Endpoint to view staff permission instance"""
     queryset = StaffPermission.objects.all()
     serializer_class = StaffPermissionSerializer
     lookup_field = 'pk'
 
 
 class StaffPermissionListAPIView(generics.ListAPIView):
+    """Endpoint to list all staff permissions in the database"""
     serializer_class = StaffPermissionSerializer
     queryset = StaffPermission.objects.all()
 
     
 class StaffPermissionUpdateAPIView(generics.GenericAPIView):
+    """Endpoint to modify permissions on a staff"""
     serializer_class = PermissionUpdateSerializer
     queryset = StaffPermission.objects.all()
     permission_classes = [IsAuthenticated]

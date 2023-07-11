@@ -23,6 +23,11 @@ def set_request(request):
     thread_local.request = request
 
 
+class ActiveUserManager(models.Manager):
+   def get_queryset(self):
+       return super().get_queryset().filter(is_active=True)
+
+
 class Tribe(models.Model):
     name = models.CharField(max_length=255, unique=True)
     description = models.TextField()
@@ -77,6 +82,9 @@ class StaffBaseModel(BaseModel):
 class Staff(StaffBaseModel):
     email = models.EmailField(max_length=255, unique=True)
 
+    active_objects = ActiveUserManager()
+    objects = models.Manager()
+
     def __str__(self) -> str:
         return self.full_name()
     
@@ -93,6 +101,9 @@ class ServiceProvider(BaseModel):
     picture = models.ImageField(upload_to='sp_picture/', blank=True, null=True)
     website_url = models.URLField()
     slug = models.SlugField(blank=True, null=True)
+
+    objects = models.Manager()
+    active_objects = ActiveUserManager()
 
     def __str__(self) -> str:
         return self.name

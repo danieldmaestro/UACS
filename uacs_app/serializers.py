@@ -13,6 +13,7 @@ from uacs_app import signals
 User = get_user_model()
 
 class LoginSerializer(serializers.Serializer):
+    """Custom login serializer"""
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
 
@@ -48,6 +49,7 @@ class LoginSerializer(serializers.Serializer):
     
 
 class LogoutSerializer(serializers.Serializer):
+    """Logout serializer"""
 
     refresh = serializers.CharField(write_only=True)
 
@@ -183,11 +185,6 @@ class ActivityLogSerializer(serializers.ModelSerializer):
             return f"{obj.action_type} access for {obj.content_object.full_name()}"
         elif obj.action_type == CREATED:
             return f"{obj.action_type} a service provider, {obj.content_object.name}"
-        elif obj.action_type == LOGIN:
-            return f"Attempted login by {obj.actor.email}"
-        elif obj.action_type == LOGIN_FAILED:
-            remark_list = [item.strip() for item in obj.remark.split(",")]
-            return f"Attempted login by {remark_list[0]}"
         
     def get_date(self, obj) -> str:
         return obj.action_time.date().isoformat()
