@@ -65,7 +65,7 @@ class StaffBaseModel(BaseModel):
     squad = models.ForeignKey(Squad, on_delete=models.CASCADE)
     designation = models.ForeignKey(Designation, on_delete=models.CASCADE, null=True)
     role = models.CharField(max_length=100, choices=ROLE_CHOICES, null=True)
-    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
+    profile_picture = models.ImageField(upload_to='profile_pictures/', default='static/images/pi.png')
 
     class Meta:
         abstract = True

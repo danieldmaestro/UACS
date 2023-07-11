@@ -102,7 +102,7 @@ class StaffSerializer(serializers.HyperlinkedModelSerializer):
         model = Staff
         fields = ['id', 'url', 'email', 'first_name', 'last_name', 'phone_number', 'tribe', 'squad', 'role', 
                   'designation', 'full_designation', 'tribe_name', 'squad_name', 'designation_name', 
-                  'reset_url', 'revoke_url', 'permissions', 'profile_picture', 'permission_update_url']
+                  'reset_url', 'revoke_url', 'permissions', 'profile_picture', 'permission_update_url',]
     
     def get_full_designation(self,obj) -> str:
         return f"{obj.role}, {obj.designation}"
@@ -136,7 +136,7 @@ class StaffSerializer(serializers.HyperlinkedModelSerializer):
 class ServiceProviderSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name="uacs:sp_detail", read_only=True)
     slug = serializers.SlugField(read_only=True)
-    picture = serializers.ImageField(read_only=True)
+    picture = serializers.ImageField()
     staffs_with_permission = serializers.SerializerMethodField()
     date = serializers.SerializerMethodField()
     toggle_status_url = serializers.SerializerMethodField()
