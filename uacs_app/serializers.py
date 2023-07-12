@@ -215,7 +215,7 @@ class SecurityLogSerializer(serializers.ModelSerializer):
         if obj.action_type == LOGIN:
             return f"Attempted login by {obj.actor.email}"
         elif obj.action_type == LOGIN_FAILED:
-            remark_list = [item.strip() for item in obj.remark.split(",")]
+            remark_list = [item.strip() for item in obj.remarks.split(",")]
             return f"Attempted login by {remark_list[0]}"
         elif obj.action_type == LOGOUT:
             return f"{obj.actor.email} successfully logged out."

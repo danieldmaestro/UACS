@@ -1,3 +1,4 @@
+#base image
 FROM python:3.8
 
 RUN mkdir -p /home/app
