@@ -134,12 +134,14 @@ class ActivityLog(BaseLog):
 
 
 class SecurityLog(BaseLog):
+    location = models.CharField(max_length=100, null=True)
+    ip_address = models.CharField(max_length=100, null=True)
 
     class Meta:
         ordering = ['-action_time'] 
 
     def __str__(self) -> str:
-        return f"{self.action_type} by {self.actor} on {self.action_time}"
+        return f"{self.action_type} by {self.action_time}"
 
     
 @receiver(pre_save, sender=ServiceProvider)

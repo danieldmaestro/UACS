@@ -1,13 +1,13 @@
 version: '3.7'
 services:
   django_server:
-    # build: .
-    image: 7957bc38925a
+    build: .
+    image: d969baa6015f038a6abe83dc69ef35823062dad5cd8d6f1a297bcf78144dcb0e
     restart: on-failure
-    command: bash -c "python manage.py collectstatic --no-input && python manage.py runserver"
+    command: bash -c "python manage.py collectstatic --no-input && gunicorn -b 0.0.0.0:8014 UACS.wsgi"
     volumes:
      - ./.env:/home/app/.env
      - ./static/:/home/app/staticfiles
      - ./media/:/home/app/media
     ports:
-     - "8000:8000"
+     - "8014:8014"

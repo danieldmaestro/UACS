@@ -202,14 +202,16 @@ class ActivityLogSerializer(serializers.ModelSerializer):
     
     
 class SecurityLogSerializer(serializers.ModelSerializer):
-    actor = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     activity = serializers.SerializerMethodField()
     date = serializers.SerializerMethodField()
     time = serializers.SerializerMethodField()
+    location = serializers.SerializerMethodField()
+    ip_address = serializers.SerializerMethodField()
+    service_provider = serializers.SerializerMethodField()
 
     class Meta:
         model = SecurityLog
-        fields = ['id', 'actor', 'action_time', 'date', 'time', 'status', 'activity']
+        fields = ['id', 'date', 'time', 'status', 'activity', 'location', 'ip_address', 'service_provider']
 
     def get_activity(self, obj) -> str:
         if obj.action_type == LOGIN:
@@ -221,10 +223,23 @@ class SecurityLogSerializer(serializers.ModelSerializer):
             return f"{obj.actor.email} successfully logged out."
         
     def get_date(self, obj) -> str:
-        return obj.action_time.date().isoformat()
-    
+        date = obj.action_time
+        formatted_date = date.strftime('%b. %d, %Y')
+        return formatted_date
+        
     def get_time(self, obj) -> str:
-        return obj.action_time.time().isoformat()
+        date = obj.action_time
+        formatted_time = date.strftime('%I:%M %p')
+        return formatted_time.lower()
+    
+    def get_location(self, obj) -> str:
+        return obj.location
+    
+    def get_ip_address(self, obj) -> str:
+        return f"IP {obj.ip_address}"
+    
+    def get_service_provider(self,obj) -> str:
+        return "UACS"
         
 
 class EmailOTPSerializer(serializers.Serializer):

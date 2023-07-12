@@ -9,19 +9,23 @@ from .utils import get_client_ip, get_user_location
 
 @receiver(user_logged_in)
 def log_user_login(sender, request, user, **kwargs):
-    message = f"{get_user_location(request)}, {get_client_ip(request)}"
-    SecurityLog.objects.create(actor=user, action_type=LOGIN, remarks=message)
+    location = get_user_location(request) 
+    ip_address = get_client_ip(request)
+    SecurityLog.objects.create(actor=user, action_type=LOGIN, location=location, ip_address=ip_address)
 
 @receiver(user_logged_out)
 def log_user_logout(sender, request, user, **kwargs):
-    message = f"{get_user_location(request)}, {get_client_ip(request)}"
-    SecurityLog.objects.create(actor=user, action_type=LOGOUT, remarks=message)
+    location = get_user_location(request) 
+    ip_address = get_client_ip(request)
+    SecurityLog.objects.create(actor=user, action_type=LOGOUT, location=location, ip_address=ip_address)
 
 @receiver(user_login_failed)
 def log_user_login_failed(sender, credentials, request, **kwargs):
-    message = f"{credentials.get('email')},{get_user_location(request)},{get_client_ip(request)}"
+    message = credentials['email']
     status = kwargs.pop("status")
-    SecurityLog.objects.create(action_type=LOGIN_FAILED, remarks=message, status=status)
+    location = get_user_location(request) 
+    ip_address = get_client_ip(request)
+    SecurityLog.objects.create(action_type=LOGIN_FAILED, remarks=message, status=status, location=location, ip_address=ip_address)
 
 @receiver(permission_updated)
 def log_permission_updated(sender, user, **kwargs):
