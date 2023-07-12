@@ -105,9 +105,13 @@ class StaffAccessResetAPIView(ActivityLogMixin, generics.UpdateAPIView):
     queryset = Staff.objects.all()
     serializer_class = StaffSerializer
 
+    def get_object(self):
+        return super().get_object()
+
     def patch(self, request, *args, **kwargs):
         request.data['action'] = RESET
         instance = self.get_object()
+        print(instance)
         if not instance.is_active:
             instance.is_active = True
             instance.save()
@@ -123,6 +127,7 @@ class StaffAccessRevokeAPIView(ActivityLogMixin, generics.UpdateAPIView):
     def patch(self, request, *args, **kwargs):
         request.data['action'] = REVOKED
         instance = self.get_object()
+        print(instance)
         if instance.is_active:
             instance.is_active = False
             instance.save()
@@ -279,7 +284,7 @@ class DashboardCountAPIView(generics.GenericAPIView):
     """Custom endpoint to populate count fields on dashboard"""
     def get(self, request, *args, **kwargs):
         inactive_sp = ServiceProvider.objects.filter(is_active=False).count()
-        active_staff = Staff.objects.filter(is_active=True).count()
+        active_staff = Staff.active_objects.all().count()
 
         response = {'inactive_sps': inactive_sp,
                     'staff_with_access': active_staff}

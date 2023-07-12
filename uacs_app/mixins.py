@@ -28,14 +28,6 @@ class ActivityLogMixin:
                 return RESET
             
         elif request.method.upper() == "POST":
-            if action == LOGIN:
-                return LOGIN
-            elif action == LOGOUT:
-                return LOGOUT
-            elif action == UPDATED:
-                return UPDATED
-            elif action == LOGIN_FAILED:
-                return LOGIN_FAILED
             return CREATED
 
     def _build_log_message(self, request) -> str:
@@ -63,15 +55,20 @@ class ActivityLogMixin:
             data["content_type"] = ContentType.objects.get_for_model(
                 self.get_queryset().model
             )
-            print(data["content_type"])
-            data["content_object"] = self.created_sp if self.created_sp else self.get_object()
-            print(data["content_object"])
-            data["object_id"] = self.created_sp.id if self.created_sp else self.get_object().id
-            print(data["object_id"])
-        except (AttributeError, ValidationError):
+            if data['action_type'] == CREATED:
+                print("content_type", data["content_type"])
+                data["content_object"] = self.created_sp
+                print("content_object", data["content_object"])
+                data["object_id"] = self.created_sp.id
+                print("object_id", data["object_id"])
+            else:
+                data["content_object"] = self.get_object()
+                print("content_object", data["content_object"])
+                data["object_id"] = self.get_object().id
+                print("object_id", data["object_id"])
+        except Exception as e:
             data["content_type"] = None
-        except AssertionError:
-            pass
+            print("lmao", e)
 
         ActivityLog.objects.create(**data)
 
