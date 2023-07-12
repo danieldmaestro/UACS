@@ -186,10 +186,14 @@ class ActivityLogSerializer(serializers.ModelSerializer):
             return f"{obj.action_type} a service provider, {obj.content_object.name}"
         
     def get_date(self, obj) -> str:
-        return obj.action_time.date().isoformat()
+        date = obj.action_time
+        formatted_date = date.strftime('%dth %B %Y')
+        return formatted_date
     
     def get_time(self, obj) -> str:
-        return obj.action_time.time().isoformat()
+        date = obj.action_time
+        formatted_time = date.strftime('%I:%M %p')
+        return formatted_time
     
     def get_actor_name(self, obj) -> str:
         if hasattr(obj.actor, 'admin'):
