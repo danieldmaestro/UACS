@@ -1,12 +1,11 @@
 from django.contrib.auth import get_user_model
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes.fields import GenericForeignKey
+
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from base.constants import UPDATED, CREATED, REVOKED, RESET, LOGIN, LOGIN_FAILED, LOGOUT, SUCCESS, FAILED
+from base.constants import UPDATED, CREATED, REVOKED, RESET, LOGIN, LOGIN_FAILED, LOGOUT, FAILED
 from .models import Staff, StaffPermission, ServiceProvider, ActivityLog, Admin, SecurityLog
 from uacs_app import signals
 
@@ -147,7 +146,7 @@ class ServiceProviderSerializer(serializers.HyperlinkedModelSerializer):
         fields = ['id', 'url', 'picture', 'name', 'date', 'website_url', 'slug', 'toggle_status_url', 'staffs_with_permission',]
 
     def get_staffs_with_permission(self, obj) -> dict:
-        staffs = Staff.objects.filter(sp_permissions__service_provider=obj,
+        staffs = Staff.active_objects.filter(sp_permissions__service_provider=obj,
                                     sp_permissions__is_permitted=True)
         request = self.context.get('request')
         if request is not None:
@@ -251,8 +250,7 @@ class ResetPasswordSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class StaffModifySerializer(serializers.Serializer):
-    pass
+
 
 
 

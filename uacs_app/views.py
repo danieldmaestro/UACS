@@ -1,8 +1,6 @@
 import random
-from django.conf import settings
-from django.core.mail import send_mail
-from django.db.models import Q
-from django.shortcuts import render, get_object_or_404
+
+from django.shortcuts import get_object_or_404
 
 from rest_framework import filters, generics, status
 from rest_framework.permissions import IsAuthenticated
@@ -10,18 +8,19 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from . import signals
-from accounts.models import User
-from base.constants import UPDATED, CREATED, REVOKED, RESET, LOGIN, LOGOUT, LOGIN_FAILED, SUCCESS, FAILED
 from .mixins import ActivityLogMixin
 from .models import ActivityLog, Staff, Tribe, Squad, Designation, ServiceProvider, StaffPermission, SecurityLog
 from .serializers import (StaffSerializer,ServiceProviderSerializer, StaffPermissionSerializer,
                             ActivityLogSerializer, EmailOTPSerializer, ResetPasswordSerializer,
                             VerifyOTPSerializer, LoginSerializer, LogoutSerializer, SecurityLogSerializer,
                             PermissionUpdateSerializer)
-from .signals import permission_updated
+from .signals import permission_updated, user_logged_out
 from .tasks import send_otp_mail
 from .utils import create_permissions
+
+from accounts.models import User
+from base.constants import UPDATED, CREATED, REVOKED, RESET, LOGIN, LOGOUT
+
 
 # Create your views here.
 
@@ -49,7 +48,7 @@ class LogoutAPIView(generics.GenericAPIView):
         refresh = serializer.validated_data['refresh']
         token = RefreshToken(refresh)
         token.blacklist()
-        signals.user_logged_out.send(sender=User, request=self.request, user=self.request.user)
+        user_logged_out.send(sender=User, request=self.request, user=self.request.user)
         return Response({"message": "Logged out successfully"}, status=status.HTTP_205_RESET_CONTENT)     
         
 
