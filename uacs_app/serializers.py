@@ -138,12 +138,13 @@ class ServiceProviderSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name="uacs:sp_detail", read_only=True)
     slug = serializers.SlugField(read_only=True)
     picture = serializers.ImageField()
+    test_picture_url = serializers.SerializerMethodField()
     staffs_with_permission = serializers.SerializerMethodField()
     date = serializers.SerializerMethodField()
     toggle_status_url = serializers.SerializerMethodField()
     class Meta:
         model = ServiceProvider
-        fields = ['id', 'url', 'picture', 'name', 'date', 'website_url', 'slug', 'toggle_status_url', 'staffs_with_permission',]
+        fields = ['id', 'url', 'picture', 'test_picture_url', 'name', 'date', 'website_url', 'slug', 'toggle_status_url', 'staffs_with_permission',]
 
     def get_staffs_with_permission(self, obj) -> dict:
         staffs = Staff.active_objects.filter(sp_permissions__service_provider=obj,
@@ -153,6 +154,14 @@ class ServiceProviderSerializer(serializers.HyperlinkedModelSerializer):
             return StaffSerializer(staffs, many=True, context={'request': request}).data
         return None
     
+    def get_test_picture_url(self, obj) -> str:
+        if obj.name == 'ECN':
+            return 'https://uacs.afex.dev/uploads/sp_images/ecn46b0c7b1-114b-4c09-9f6a-9ae1405bebeb.png'
+        elif obj.name == "Commodity Grading System":
+            return "https://uacs.afex.dev/uploads/sp_images/cgs-logo4444fac0-7b6b-4eba-b2bf-76cf659d6d9e.png"
+        else:
+            return 'https://uacs.afex.dev/uploads/sp_images/workbench27710ebe-a291-40f6-acc6-3a2a9b164575.webp'
+
     def get_date(self,obj) -> str:
         return obj.created_date.date()  
 

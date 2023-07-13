@@ -1,5 +1,6 @@
 import random
 
+from django.core.mail import EmailMessage
 from django.shortcuts import get_object_or_404
 
 from rest_framework import filters, generics, status
@@ -20,6 +21,7 @@ from .utils import create_permissions
 
 from accounts.models import User
 from base.constants import UPDATED, CREATED, REVOKED, RESET, LOGIN, LOGOUT
+from UACS import settings
 
 
 # Create your views here.
@@ -227,7 +229,15 @@ class EmailOTPAPIView(generics.GenericAPIView):
             # Send the OTP code to the provided email
             subject = 'OTP Code'
             message = f'Your OTP code is: {otp}'
-            send_otp_mail.delay(subject=subject, recipient=[email], message=message)
+            # send_otp_mail.delay(subject=subject, recipient=[email], message=message)
+            msg = EmailMessage(
+                subject=subject,
+                body=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[email],
+                )
+            msg.content_subtype = 'html'
+            msg.send()
             return Response({'message': 'OTP sent successfully.'}, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({'message': 'No staff with this email is registered.'}, status=status.HTTP_400_BAD_REQUEST)
