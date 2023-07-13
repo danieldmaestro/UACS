@@ -20,7 +20,7 @@ from .tasks import send_otp_mail
 from .utils import create_permissions
 
 from accounts.models import User
-from base.constants import UPDATED, CREATED, REVOKED, RESET, LOGIN, LOGOUT
+from base.constants import UPDATED, CREATED, REVOKED, RESET, LOGIN, LOGOUT, SUCCESS
 from UACS import settings
 
 
@@ -190,7 +190,7 @@ class ServiceProviderDetailAPIView(generics.RetrieveAPIView):
 
 class ActivityLogListAPIView(generics.ListAPIView):
     """Endpoint to get list of of all activity logs"""
-    queryset = ActivityLog.objects.all()
+    queryset = ActivityLog.objects.filter(status=SUCCESS)
     serializer_class = ActivityLogSerializer
 
 
@@ -199,14 +199,12 @@ class ActivityLogDetailAPIView(generics.RetrieveAPIView):
     """Endpoint for detail of each Activity Log"""
     queryset = ActivityLog.objects.all()
     serializer_class = ActivityLogSerializer
-    permission_classes = [IsAuthenticated]
 
 
 class SecurityLogListAPIView(generics.ListAPIView):
     """Endpoint for list of Security Logs"""
     queryset = SecurityLog.objects.all()
     serializer_class = SecurityLogSerializer
-    permission_classes = [IsAuthenticated]
 
 
 class EmailOTPAPIView(generics.GenericAPIView):
@@ -256,7 +254,7 @@ class VerifyOTPAPIView(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        email = serializer.validated_data['email']
+        email = request.query_params.get("email")
         otp_code = serializer.validated_data['otp_code']
         
         try:
@@ -310,7 +308,6 @@ class StaffPermissionSetAPIView(generics.GenericAPIView):
     """Endpoint to set multiple permissions for multiple staffs"""
 
     serializer_class = StaffPermissionSerializer
-    permission_classes = [IsAuthenticated]
 
     def get_serializer(self, *args, **kwargs):
         return super().get_serializer(*args, **kwargs)
@@ -349,8 +346,7 @@ class StaffPermissionUpdateAPIView(generics.GenericAPIView):
     """Endpoint to modify permissions on a staff"""
     serializer_class = PermissionUpdateSerializer
     queryset = StaffPermission.objects.all()
-    permission_classes = [IsAuthenticated]
-
+   
     def get_serializer(self, *args, **kwargs):
         return super().get_serializer(*args, **kwargs)
     
