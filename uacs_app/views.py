@@ -40,6 +40,8 @@ class LoginAPIView(TokenObtainPairView):
 class LogoutAPIView(generics.GenericAPIView):
     """Endpoint to unauthenticate the authenticated user and blacklist access token"""
     serializer_class = LogoutSerializer
+    permission_classes = []
+    authentication_classes = []
     
     def post(self, request, *args, **kwargs):
         request.data['action'] = LOGOUT
@@ -55,7 +57,6 @@ class LogoutAPIView(generics.GenericAPIView):
 class ActiveStaffListAPIView(generics.ListAPIView):
     """Endpoint to create and new Staff and get list of staffs in the database"""
     serializer_class = StaffSerializer
-    permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter]
     search_fields = ['first_name', 'last_name']
     queryset = Staff.active_objects.all()
@@ -69,7 +70,6 @@ class ActiveStaffListAPIView(generics.ListAPIView):
 class StaffListCreateAPIView(generics.ListCreateAPIView):
     """Endpoint to create and new Staff and get list of staffs in the database"""
     serializer_class = StaffSerializer
-    permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter]
     search_fields = ['first_name', 'last_name']
     queryset = Staff.objects.all()
@@ -209,7 +209,8 @@ class SecurityLogListAPIView(generics.ListAPIView):
 
 class EmailOTPAPIView(generics.GenericAPIView):
     """Endpoint to send 6 digit passcode through to reset password"""
-
+    permission_classes = []
+    authentication_classes = []
     serializer_class = EmailOTPSerializer
 
     def post(self, request, *args, **kwargs):
@@ -235,6 +236,8 @@ class EmailOTPAPIView(generics.GenericAPIView):
 class VerifyOTPAPIView(generics.GenericAPIView):
     """Endpoint to verify the OTP for the user"""
     queryset = User.objects.all()
+    permission_classes = []
+    authentication_classes = []
     serializer_class = VerifyOTPSerializer
 
     def get_serializer(self, *args, **kwargs):
@@ -262,6 +265,8 @@ class ResetPasswordAPIView(generics.UpdateAPIView):
     """Endpoint to reset password"""
     serializer_class = ResetPasswordSerializer
     queryset = User.objects.all()
+    permission_classes = []
+    authentication_classes = []
 
     def get_object(self):
         email = self.request.data.get('email')
