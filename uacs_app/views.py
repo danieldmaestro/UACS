@@ -280,7 +280,7 @@ class ResetPasswordAPIView(generics.GenericAPIView):
         serilizer = self.get_serializer(data=request.data)
         serilizer.is_valid(raise_exception=True)
         email = serilizer.validated_data["email"]
-        new_password = serilizer.validated_data["new_password"]
+        new_password = serilizer.validated_data["confirm_password"]
         user = User.objects.filter(email=email).get()
         if user:
             user.set_password(new_password)
