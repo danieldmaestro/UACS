@@ -85,6 +85,7 @@ class PermissionUpdateSerializer(serializers.Serializer):
     def validate(self, attrs):
         return super().validate(attrs)
 
+
 class StaffSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name="uacs:staff_detail", read_only=True)
     full_designation = serializers.SerializerMethodField()
@@ -142,9 +143,10 @@ class ServiceProviderSerializer(serializers.HyperlinkedModelSerializer):
     staffs_with_permission = serializers.SerializerMethodField()
     date = serializers.SerializerMethodField()
     toggle_status_url = serializers.SerializerMethodField()
+
     class Meta:
         model = ServiceProvider
-        fields = ['id', 'url', 'picture', 'test_picture_url', 'name', 'date', 'website_url', 'slug', 'toggle_status_url', 'staffs_with_permission',]
+        fields = ['id', 'url', 'picture', 'test_picture_url', 'name', 'date', 'website_url', 'slug', 'toggle_status_url', 'is_active', 'staffs_with_permission',]
 
     def get_staffs_with_permission(self, obj) -> dict:
         staffs = Staff.active_objects.filter(sp_permissions__service_provider=obj,

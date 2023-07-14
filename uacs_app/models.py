@@ -97,7 +97,7 @@ class Admin(StaffBaseModel):
 
 
 class ServiceProvider(BaseModel):
-    name = models.CharField(max_length=150)
+    name = models.CharField(max_length=150, unique=True)
     picture = models.ImageField(upload_to='sp_picture/', blank=True, null=True)
     website_url = models.URLField()
     slug = models.SlugField(blank=True, null=True)
