@@ -259,6 +259,7 @@ class EmailOTPSerializer(serializers.Serializer):
 
 class VerifyOTPSerializer(serializers.Serializer):
     otp_code = serializers.CharField(max_length=6, write_only=True)
+    email = serializers.EmailField(write_only=True)
 
 
 class ResetPasswordSerializer(serializers.ModelSerializer):

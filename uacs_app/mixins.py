@@ -56,16 +56,11 @@ class ActivityLogMixin:
                 self.get_queryset().model
             )
             if data['action_type'] == CREATED:
-                print("content_type", data["content_type"])
                 data["content_object"] = self.created_sp
-                print("content_object", data["content_object"])
                 data["object_id"] = self.created_sp.id
-                print("object_id", data["object_id"])
             else:
                 data["content_object"] = self.get_object()
-                print("content_object", data["content_object"])
                 data["object_id"] = self.get_object().id
-                print("object_id", data["object_id"])
         except Exception as e:
             data["content_type"] = None
             print("lmao", e)

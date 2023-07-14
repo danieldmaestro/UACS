@@ -254,7 +254,7 @@ class VerifyOTPAPIView(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        email = request.query_params.get("email")
+        email = serializer.validated_data['email']
         otp_code = serializer.validated_data['otp_code']
         
         try:
