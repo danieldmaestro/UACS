@@ -269,28 +269,24 @@ class VerifyOTPAPIView(generics.GenericAPIView):
         return Response({'message': 'Verification code is invalid.'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ResetPasswordAPIView(generics.UpdateAPIView):
+class ResetPasswordAPIView(generics.GenericAPIView):
     """Endpoint to reset password"""
     serializer_class = ResetPasswordSerializer
     queryset = User.objects.all()
     permission_classes = []
     authentication_classes = []
 
-    def get_object(self):
-        email = self.request.data.get('email')
-        try:
-            user = self.queryset.filter(email=email).get()
-        except self.model.DoesNotExist:
-            user = None
-        return user
-
-    def perform_update(self, serializer):
-        user = self.get_object()
-        if user is None:
-            return Response({'message': 'No user associated with this email'}, status=status.HTTP_400_BAD_REQUEST)
-        password = serializer.validated_data['password']
-        user.set_password(password)
-        return Response({'message': 'Password updated successfully'}, status=status.HTTP_202_ACCEPTED)
+    def post(self, request):
+        serilizer = self.get_serializer(data=request.data)
+        serilizer.is_valid(raise_exception=True)
+        email = serilizer.validated_data["email"]
+        new_password = serilizer.validated_data["new_password"]
+        user = User.objects.filter(email=email).get()
+        if user:
+            user.set_password(new_password)
+            user.save()
+            return Response({"message": "Password reset successfully"}, status=status.HTTP_200_OK)
+        return Response({"message": "Invalid email address"}, status=status.HTTP_400_BAD_REQUEST)
     
 
 class DashboardCountAPIView(generics.GenericAPIView):

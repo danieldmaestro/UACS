@@ -265,6 +265,7 @@ class VerifyOTPSerializer(serializers.Serializer):
 class ResetPasswordSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=128, write_only=True)
     confirm_password = serializers.CharField(max_length=128, write_only=True)
+    email = serializers.EmailField(write_only=True)
 
     class Meta:
         model = User
