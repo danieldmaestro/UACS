@@ -77,6 +77,7 @@ class Staff(StaffBaseModel):
 
     class Meta:
         indexes = [models.Index(fields=['first_name', 'last_name'])]
+        ordering = ['-created_date']
 
     def __str__(self) -> str:
         return self.full_name()

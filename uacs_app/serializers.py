@@ -100,12 +100,13 @@ class StaffSerializer(serializers.HyperlinkedModelSerializer):
     revoke_url = serializers.SerializerMethodField()
     permission_update_url = serializers.SerializerMethodField()
     permissions = serializers.SerializerMethodField()
+    providers_with_access = serializers.SerializerMethodField()
 
     class Meta:
         model = Staff
         fields = ['id', 'url', 'email', 'first_name', 'last_name', 'phone_number', 'tribe', 'squad', 'role', 
                   'designation', 'full_designation', 'tribe_name', 'squad_name', 'designation_name', 
-                  'reset_url', 'revoke_url', 'permissions', 'profile_picture', 'permission_update_url',]
+                'providers_with_access', 'permissions', 'profile_picture', 'permission_update_url','reset_url', 'revoke_url',]
     
     def get_full_designation(self,obj) -> str:
         return f"{obj.role}, {obj.designation}"
@@ -128,6 +129,11 @@ class StaffSerializer(serializers.HyperlinkedModelSerializer):
         if request is not None:
             return StaffPermissionSerializer(permissions, many=True, context={'request': request}).data
         return None
+    
+    def get_providers_with_access(self, obj) -> list:
+        permissions = obj.sp_permissions.filter(is_permitted=True)
+        sp_names = [sp.service_provider.name for sp in permissions]
+        return sp_names
     
     def get_permission_update_url(self,obj) -> str:
         request = self.context.get('request')
