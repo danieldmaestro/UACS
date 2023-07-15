@@ -87,15 +87,8 @@ class PermissionUpdateSerializer(serializers.Serializer):
         return super().validate(attrs)
 
 
-class StaffSerializer(serializers.HyperlinkedModelSerializer):
-    url = serializers.HyperlinkedIdentityField(view_name="uacs:staff_detail", read_only=True)
+class StaffSerializer(serializers.ModelSerializer):
     full_designation = serializers.SerializerMethodField()
-    tribe = serializers.CharField(source="tribe.name", read_only=True)
-    squad = serializers.CharField(source="squad.name", read_only=True)
-    designation = serializers.CharField(source="designation.name", read_only=True)
-    tribe_name = serializers.CharField(write_only=True)
-    squad_name = serializers.CharField(write_only=True)
-    designation_name = serializers.CharField(write_only=True)
     reset_url = serializers.SerializerMethodField()
     revoke_url = serializers.SerializerMethodField()
     permission_update_url = serializers.SerializerMethodField()
@@ -104,12 +97,12 @@ class StaffSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Staff
-        fields = ['id', 'url', 'email', 'first_name', 'last_name', 'phone_number', 'tribe', 'squad', 'role', 
-                  'designation', 'full_designation', 'tribe_name', 'squad_name', 'designation_name', 
-                'providers_with_access', 'permissions', 'profile_picture', 'permission_update_url','reset_url', 'revoke_url',]
+        fields = ['id', 'email', 'first_name', 'last_name', 'phone_number', 'tribe', 'squad', 'role', 
+                  'designation', 'full_designation', 'providers_with_access', 'permissions', 'profile_picture', 
+                  'permission_update_url','reset_url', 'revoke_url',]
     
     def get_full_designation(self,obj) -> str:
-        return f"{obj.role}, {obj.designation}"
+        return f"{obj.role}, {obj.designation.name}"
     
     def get_reset_url(self, obj) -> str:
         request = self.context.get('request')
@@ -201,7 +194,10 @@ class ActivityLogSerializer(serializers.ModelSerializer):
         elif obj.action_type == RESET:
             return f"{obj.action_type} access for {obj.content_object.full_name()}"
         elif obj.action_type == CREATED:
-            return f"{obj.action_type} a service provider, {obj.content_object.name}"
+            if obj.content_type.model == "serviceprovider":
+                return f"{obj.action_type} a service provider, {obj.content_object.name}"
+            elif obj.content_type.model == "staff":
+                return f"{obj.action_type} a new staff, {obj.content_object.full_name()}"
         
     def get_date(self, obj) -> str:
         date = obj.action_time

@@ -69,7 +69,15 @@ class ActiveStaffListAPIView(generics.ListAPIView):
         return context
 
 
-class StaffListCreateAPIView(generics.ListCreateAPIView):
+class StaffListAPIView(generics.ListAPIView):
+    """Endpoint to create and new Staff and get list of staffs in the database"""
+    serializer_class = StaffSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['first_name', 'last_name']
+    queryset = Staff.objects.all()
+    
+
+class StaffCreateAPIView(ActivityLogMixin, generics.CreateAPIView):
     """Endpoint to create and new Staff and get list of staffs in the database"""
     serializer_class = StaffSerializer
     filter_backends = [filters.SearchFilter]
@@ -82,15 +90,8 @@ class StaffListCreateAPIView(generics.ListCreateAPIView):
         return context
     
     def perform_create(self, serializer):
-        tribe_name = serializer.validated_data.pop('tribe_name')
-        squad_name = serializer.validated_data.pop('squad_name')
-        designation_name = serializer.validated_data.pop('designation_name')
-        tribe = get_object_or_404(Tribe, name__iexact=tribe_name)
-        squad = get_object_or_404(Squad, name__iexact=squad_name)
-        designation = get_object_or_404(Designation, name__iexact=designation_name)
-        staff = serializer.save(
-            tribe=tribe, squad=squad, designation=designation
-        )
+        staff = serializer.save()
+        self.created_obj = staff
         create_permissions(staff)
         return Response({'message': 'Staff created succesfully'}, status=status.HTTP_201_CREATED)
     
@@ -142,7 +143,7 @@ class ServiceProviderCreateAPIView(ActivityLogMixin, generics.CreateAPIView):
 
     def perform_create(self, serializer):
         service_provider = serializer.save()
-        self.created_sp = service_provider
+        self.created_obj = service_provider
         for staff in Staff.objects.all():
             StaffPermission.objects.create(staff=staff, service_provider=service_provider)
 

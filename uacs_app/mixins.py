@@ -51,8 +51,8 @@ class ActivityLogMixin:
                 self.get_queryset().model
             )
             if data['action_type'] == CREATED:
-                data["content_object"] = self.created_sp
-                data["object_id"] = self.created_sp.id
+                data["content_object"] = self.created_obj
+                data["object_id"] = self.created_obj.id
             else:
                 data["content_object"] = self.get_object()
                 data["object_id"] = self.get_object().id

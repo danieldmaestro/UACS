@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from .views import (ActivityLogListAPIView, ServiceProviderCreateAPIView, StaffListCreateAPIView, 
+from .views import (ActivityLogListAPIView, ServiceProviderCreateAPIView, StaffListAPIView, StaffCreateAPIView, 
                     EmailOTPAPIView, ResetPasswordAPIView, LogoutAPIView, StaffDetailAPIView, 
                     ServiceProviderDetailAPIView, ActivityLogDetailAPIView, VerifyOTPAPIView,
                     StaffPermissionSetAPIView, StaffAccessResetAPIView, StaffAccessRevokeAPIView,
@@ -24,7 +24,8 @@ urlpatterns = [
     path('service_providers/create/', ServiceProviderCreateAPIView.as_view(), name="sp_create" ),
     path('service_providers/<int:pk>/', ServiceProviderDetailAPIView.as_view(), name="sp_detail" ),
     path('service_providers/<int:pk>/status_toggle/', ServiceProviderToggleStatusAPIView.as_view(), name="sp_toggle_status" ),
-    path('staffs/all/', StaffListCreateAPIView.as_view(), name="staff_list_create"),
+    path('staffs/all/', StaffListAPIView.as_view(), name="staff_list"),
+    path('staffs/create/', StaffCreateAPIView.as_view(), name="staff_list"),
     path('staffs/active/', ActiveStaffListAPIView.as_view(), name="active_staff"),
     path('staffs/<int:pk>/', StaffDetailAPIView.as_view(), name="staff_detail"),
     path('staffs/<int:pk>/revoke/', StaffAccessRevokeAPIView.as_view(), name='revoke'),
