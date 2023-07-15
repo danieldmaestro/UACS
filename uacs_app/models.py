@@ -1,26 +1,16 @@
-import threading
-
-from django.contrib.auth import get_user_model
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.utils.text import slugify
 
 from accounts.models import User
-from base.constants import (INTERN, ANALYST, HEAD, MANAGER, MANAGING_DIRECTOR, VP,
-                             ASSOCIATE, UPDATED, CREATED, RESET, REVOKED, SUCCESS, ACTION_STATUS,
-                             )
+from base.constants import INTERN, ANALYST, HEAD, MANAGER, MANAGING_DIRECTOR, VP, ASSOCIATE
 from base.models import BaseModel, BaseLog
 from phonenumber_field.modelfields import PhoneNumberField
 
 # Create your models here.
-
-thread_local = threading.local()
-
-def set_request(request):
-    thread_local.request = request
 
 
 class ActiveUserManager(models.Manager):
@@ -85,6 +75,9 @@ class Staff(StaffBaseModel):
     active_objects = ActiveUserManager()
     objects = models.Manager()
 
+    class Meta:
+        indexes = [models.Index(fields=['first_name', 'last_name'])]
+
     def __str__(self) -> str:
         return self.full_name()
     
@@ -100,10 +93,13 @@ class ServiceProvider(BaseModel):
     name = models.CharField(max_length=150, unique=True)
     picture = models.ImageField(upload_to='sp_picture/', blank=True, null=True)
     website_url = models.URLField()
-    slug = models.SlugField(blank=True, null=True)
+    slug = models.SlugField(blank=True)
 
     objects = models.Manager()
     active_objects = ActiveUserManager()
+
+    class Meta:
+        indexes = [models.Index(fields=['name'])]
 
     def __str__(self) -> str:
         return self.name
@@ -119,7 +115,6 @@ class StaffPermission(models.Model):
 
 
 class ActivityLog(BaseLog):
-    # for generic relations
     content_type = models.ForeignKey(
         ContentType, models.SET_NULL, blank=True, null=True
     )

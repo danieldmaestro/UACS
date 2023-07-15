@@ -20,7 +20,7 @@ from .tasks import send_otp_mail
 from .utils import create_permissions
 
 from accounts.models import User
-from base.constants import UPDATED, CREATED, REVOKED, RESET, LOGIN, LOGOUT, SUCCESS
+from base.constants import UPDATED, REVOKED, RESET, LOGIN, LOGOUT, SUCCESS
 from UACS import settings
 
 
@@ -99,7 +99,6 @@ class StaffDetailAPIView(generics.RetrieveAPIView):
     """Endpoint to get individual staff information"""
     serializer_class = StaffSerializer
     queryset = Staff.objects.all()
-    permission_classes = [IsAuthenticated]
 
 
 class StaffAccessResetAPIView(ActivityLogMixin, generics.UpdateAPIView):
@@ -113,7 +112,6 @@ class StaffAccessResetAPIView(ActivityLogMixin, generics.UpdateAPIView):
     def patch(self, request, *args, **kwargs):
         request.data['action'] = RESET
         instance = self.get_object()
-        print(instance)
         if not instance.is_active:
             instance.is_active = True
             instance.save()
@@ -140,7 +138,6 @@ class StaffAccessRevokeAPIView(ActivityLogMixin, generics.UpdateAPIView):
 class ServiceProviderCreateAPIView(ActivityLogMixin, generics.CreateAPIView):
     """Endpoint to create a new Service Provider"""
     serializer_class = ServiceProviderSerializer
-    permission_classes = [IsAuthenticated]
     queryset = ServiceProvider.objects.all()
 
     def perform_create(self, serializer):
@@ -168,7 +165,7 @@ class ActiveServiceProviderListAPIView(generics.ListAPIView):
     queryset = ServiceProvider.active_objects.all()
     
     
-class ServiceProviderToggleStatusAPIView(ActivityLogMixin, generics.UpdateAPIView):
+class ServiceProviderToggleStatusAPIView(generics.UpdateAPIView):
     """Endpoint to toggle active status for Service Provider"""
     serializer_class = ServiceProviderSerializer
     queryset = ServiceProvider.objects.all()
@@ -322,7 +319,8 @@ class StaffPermissionSetAPIView(generics.GenericAPIView):
                 permission.is_permitted = True
                 permission.save()
                 permission_updated.send(sender=StaffPermission, user=user, action_type=UPDATED, content_object=permission)
-        return Response({'message': 'Permission granted for selected staff and service providers'}, status=status.HTTP_201_CREATED)
+
+        return Response({'message': 'Permission granted for selected staff'}, status=status.HTTP_201_CREATED)
 
 
 class StaffPermissionDetailAPIView(generics.RetrieveAPIView):
@@ -366,14 +364,12 @@ class StaffPermissionUpdateAPIView(generics.GenericAPIView):
                 perm.is_permitted = True
                 perm.save()
                 permission_updated.send(sender=StaffPermission, user=user, action_type=UPDATED, content_object=perm)
-                print("true loop ran")
 
         for perm in perm_false:
             if perm.is_permitted == True:
                 perm.is_permitted = False
                 perm.save()
                 permission_updated.send(sender=StaffPermission, user=user, action_type=UPDATED, content_object=perm)
-                print("false loop ran")
                 
 
         # staff_permissions.filter(pk__in=permission_ids).values_list("is_permitted", flat=True).update(is_permitted=True)

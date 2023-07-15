@@ -1,12 +1,7 @@
-import logging
-
-from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 
-from rest_framework.exceptions import ValidationError
-
 from .models import ActivityLog
-from base.constants import UPDATED, CREATED, REVOKED, RESET, LOGIN, LOGOUT, LOGIN_FAILED, SUCCESS, FAILED
+from base.constants import CREATED, REVOKED, RESET, SUCCESS, FAILED
 
 
 class ActivityLogMixin:
@@ -20,7 +15,7 @@ class ActivityLogMixin:
     log_message = None
 
     def _get_action_type(self, request) -> str:
-        action = request.data.get("action")  # Assuming 'action' is a field in the request data
+        action = request.data.get("action") 
         if request.method.upper() == "PATCH":
             if action == REVOKED:
                 return REVOKED
@@ -63,7 +58,6 @@ class ActivityLogMixin:
                 data["object_id"] = self.get_object().id
         except Exception as e:
             data["content_type"] = None
-            print("lmao", e)
 
         ActivityLog.objects.create(**data)
 
