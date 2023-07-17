@@ -101,6 +101,7 @@ class ServiceProvider(BaseModel):
 
     class Meta:
         indexes = [models.Index(fields=['name'])]
+        ordering = ['-created_date']
 
     def __str__(self) -> str:
         return self.name
