@@ -20,8 +20,9 @@ def get_user_location(request):
     response = requests.get(f"http://api.ipstack.com/{ip}?access_key={os.environ.get('API_KEY')}")
     if response.status_code == 200:
         data = response.json()
-        location = f"{data['city']}, {data['country_name']}"
-        return location
+        if data['success'] == True:
+            location = f"{data['city']}, {data['country_name']}"
+            return location
     return None
 
 def create_permissions(staff):
