@@ -379,6 +379,8 @@ class StaffPermissionUpdateAPIView(generics.GenericAPIView):
 
 
 class DashAPIView(generics.GenericAPIView):
+    permission_classes = []
+    authentication_classes = []
 
     def get(self, request, *args, **kwargs):
 
@@ -476,9 +478,10 @@ class DashAPIView(generics.GenericAPIView):
 
 
 class MarketplaceAPIView(generics.GenericAPIView):
+    permission_classes = []
+    authentication_classes = []
 
     def get(self, request, *args, **kwargs):
-
         payload = {
             "balance": "13.2 ETH",
             "trending_nfts": [
