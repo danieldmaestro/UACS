@@ -7,7 +7,8 @@ from .views import (ActivityLogListAPIView, ServiceProviderCreateAPIView, StaffL
                     StaffPermissionSetAPIView, StaffAccessResetAPIView, StaffAccessRevokeAPIView,
                     StaffPermissionDetailAPIView, StaffPermissionListAPIView, ServiceProviderToggleStatusAPIView,
                     LoginAPIView, ServiceProviderListAPIView, SecurityLogListAPIView, DashboardCountAPIView,
-                    StaffPermissionUpdateAPIView, ActiveStaffListAPIView,ActiveServiceProviderListAPIView)
+                    StaffPermissionUpdateAPIView, ActiveStaffListAPIView,ActiveServiceProviderListAPIView,
+                    DashAPIView, MarketplaceAPIView)
 
 app_name = 'uacs'
 
@@ -38,4 +39,6 @@ urlpatterns = [
     path('staff_permissions/', StaffPermissionListAPIView.as_view(), name="staff_permission_list"),
     path('staff_permissions/update/', StaffPermissionUpdateAPIView.as_view(), name="staff_permission_update"),
     path('count/', DashboardCountAPIView.as_view(), name="dashboard_count"),
+    path('dashboard/', DashAPIView.as_view(), name="dashboard"),
+    path('marketplace/', MarketplaceAPIView.as_view(), name="marketplace"),
 ]

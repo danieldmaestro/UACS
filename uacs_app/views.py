@@ -378,3 +378,218 @@ class StaffPermissionUpdateAPIView(generics.GenericAPIView):
         return Response({'message': f'Permissions for {staff.full_name()} updated successfully.'}, status=status.HTTP_201_CREATED)
 
 
+class DashAPIView(generics.GenericAPIView):
+
+    def get(self, request, *args, **kwargs):
+
+        payload = {
+            "earnings": 11300.4,
+            "spend": 5398,
+            "sales": 19456,
+            "sales_percent": "28%",
+            "balance": 12398,
+            "new_tasks": 201,
+            "total_projects": 2933,
+            "daily_traffic": 253,
+            "check_table" : [
+
+                {
+                    "name": "Horizon UI Pro",
+                    "progress": "22.5%",
+                    "quantity": 3.65,
+                    "date": "13th May, 2022",
+                    "state" : False,
+                    "status": "Approved",
+                },
+                {
+                    "name": "Horizon UI Free",
+                    "progress": "12.3%",
+                    "quantity": 2.15,
+                    "date": "3rd Feb, 2022",
+                    "state" : True,
+                    "status": "Disabled",
+                },
+                {
+                    "name": "Weekly Update",
+                    "progress": "32.2%",
+                    "quantity": 1.53,
+                    "date": "18th Aug, 2023",
+                    "state" : True,
+                    "status": "Error",
+                },
+                {
+                    "name": "Venus 3D Asset",
+                    "progress": "12.75%",
+                    "quantity": 5.20,
+                    "date": "31st Oct, 2022",
+                    "state" : True,
+                    "status": "Approved",
+                },
+                {
+                    "name": "Marketplace",
+                    "progress": "15.5%",
+                    "quantity": 3.25,
+                    "date": "22nd Jul, 2023",
+                    "state" : False,
+                    "status": "Error",
+                }
+            ],
+            "tasks": [
+                {
+                    "name" : "Landing Page Design",
+                    "state" : False,
+                },
+                {
+                    "name" : "Dashboard Builder",
+                    "state" : True,
+                },
+                {
+                    "name" : "Mobile App Design",
+                    "state" : True,
+                },
+                {
+                    "name" : "Illustrations",
+                    "state" : False,
+                },
+                {
+                    "name" : "Promotional LP",
+                    "state" : False,
+                },
+            ],
+            "team_members": [
+                {
+                    "name" : "Chisom Okeoma",
+                    "role" : "Frontend Web Developer",
+                },
+                {
+                    "name" : "Daniel Momodu",
+                    "role" : "Backend Web Developer",
+                },
+                {
+                    "name" : "Tola Oduyomi",
+                    "role" : "Mobile Developer",
+                },
+            ]
+        }
+
+        return Response(payload, status=status.HTTP_200_OK)
+
+
+class MarketplaceAPIView(generics.GenericAPIView):
+
+    def get(self, request, *args, **kwargs):
+
+        payload = {
+            "balance": "13.2 ETH",
+            "trending_nfts": [
+                {
+                    "name": "Abstract Colors",
+                    "creator": "Taofeeq Otu",
+                    "current_bid": "1.1 ETH",
+                },
+                {
+                    "name": "ETH AI Brain",
+                    "creator": "Hafsah Abiodun",
+                    "current_bid": "2.43 ETH",
+                },
+                {
+                    "name": "Mesh Gradients",
+                    "creator": "Orru Temisan",
+                    "current_bid": "1.2 ETH",
+                },
+            ],
+            "recently_added": [
+                {
+                    "name": "Swipe Circles",
+                    "creator": "Faith Adeosun",
+                    "current_bid": "1.62 ETH",
+                },
+                {
+                    "name": "Colorful Heaven",
+                    "creator": "Afolabi Adepena",
+                    "current_bid": "12.2 ETH",
+                },
+                {
+                    "name": "3D Cubes Art",
+                    "creator": "Maestro",
+                    "current_bid": "114 ETH",
+                },
+            ],
+            "top_creaters": [
+                {
+                    "name": "@xommie",
+                    "artworks": 7839,
+                },
+                {
+                    "name": "@maestro_himself",
+                    "artworks": 1,
+                },
+                {
+                    "name": "@yettybella",
+                    "artworks": 2311,
+                },
+                {
+                    "name": "@babataofeeq",
+                    "artworks": 1201,
+                },
+                {
+                    "name": "@badboymajeed",
+                    "artworks": 6524,
+                },
+                {
+                    "name": "@busolababy",
+                    "artworks": 5439,
+                },
+                {
+                    "name": "@lukmaninterimCTO",
+                    "artworks": 3567,
+                },
+                {
+                    "name": "@influencer007",
+                    "artworks": 4300,
+                },
+            ],
+            "history": [
+                 {
+                    "name": "Swipe Circles",
+                    "creator": "Faith Adeosun",
+                    "current_bid": "1.62 ETH",
+                    "time": "30s ago",
+                },
+                {
+                    "name": "Colorful Heaven",
+                    "creator": "Afolabi Adepena",
+                    "current_bid": "12.2 ETH",
+                    "time": "12m ago",
+                },
+                {
+                    "name": "3D Cubes Art",
+                    "creator": "Maestro",
+                    "current_bid": "114 ETH",
+                    "time": "15m ago",
+                },
+                {
+                    "name": "Abstract Colors",
+                    "creator": "Taofeeq Otu",
+                    "current_bid": "1.1 ETH",
+                    "time": "1d ago",
+                },
+                {
+                    "name": "ETH AI Brain",
+                    "creator": "Hafsah Abiodun",
+                    "current_bid": "2.43 ETH",
+                    "time": "3d ago",
+                },
+                {
+                    "name": "Mesh Gradients",
+                    "creator": "Orru Temisan",
+                    "current_bid": "1.2 ETH",
+                    "time": "13d ago",
+                },
+            ]
+        }
+
+        return Response(payload, status=status.HTTP_200_OK)
+
+        
+
