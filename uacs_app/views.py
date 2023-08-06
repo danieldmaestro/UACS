@@ -603,7 +603,7 @@ class TrackedSitesAPIView(generics.GenericAPIView):
     def get(self, request, *args, **kwargs):
 
         payload = {
-            "tracked_sites" : ["https://bitbucket.org", "https://github.com"],
+            "tracked_sites" : ["https://bitbucket.org", "https://bitbucket.com", "https://github.com"],
         }
 
         return Response(payload, status=status.HTTP_200_OK)
