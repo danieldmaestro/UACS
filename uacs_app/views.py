@@ -594,5 +594,16 @@ class MarketplaceAPIView(generics.GenericAPIView):
 
         return Response(payload, status=status.HTTP_200_OK)
 
-        
 
+class TrackedSitesAPIView(generics.GenericAPIView):
+
+    permission_classes = []
+    authentication_classes = []
+
+    def get(self, request, *args, **kwargs):
+
+        payload = {
+            "tracked_sites" : ["https://bitbucket.org", "https://github.com"],
+        }
+
+        return Response(payload, status=status.HTTP_200_OK)

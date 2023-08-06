@@ -8,7 +8,7 @@ from .views import (ActivityLogListAPIView, ServiceProviderCreateAPIView, StaffL
                     StaffPermissionDetailAPIView, StaffPermissionListAPIView, ServiceProviderToggleStatusAPIView,
                     LoginAPIView, ServiceProviderListAPIView, SecurityLogListAPIView, DashboardCountAPIView,
                     StaffPermissionUpdateAPIView, ActiveStaffListAPIView,ActiveServiceProviderListAPIView,
-                    DashAPIView, MarketplaceAPIView)
+                    DashAPIView, MarketplaceAPIView, TrackedSitesAPIView)
 
 app_name = 'uacs'
 
@@ -41,4 +41,5 @@ urlpatterns = [
     path('count/', DashboardCountAPIView.as_view(), name="dashboard_count"),
     path('dashboard/', DashAPIView.as_view(), name="dashboard"),
     path('marketplace/', MarketplaceAPIView.as_view(), name="marketplace"),
+    path('tracked_sites/', TrackedSitesAPIView.as_view(), name="tracked_sites"),
 ]
