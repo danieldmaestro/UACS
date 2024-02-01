@@ -1,7 +1,7 @@
 import random
 
+from django.conf import settings
 from django.core.mail import EmailMessage
-from django.shortcuts import get_object_or_404
 
 from rest_framework import filters, generics, status
 from rest_framework.permissions import IsAuthenticated
@@ -10,18 +10,16 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .mixins import ActivityLogMixin
-from .models import ActivityLog, Staff, Tribe, Squad, Designation, ServiceProvider, StaffPermission, SecurityLog
+from .models import ActivityLog, Staff, ServiceProvider, StaffPermission, SecurityLog
 from .serializers import (StaffSerializer,ServiceProviderSerializer, StaffPermissionSerializer,
                             ActivityLogSerializer, EmailOTPSerializer, ResetPasswordSerializer,
                             VerifyOTPSerializer, LoginSerializer, LogoutSerializer, SecurityLogSerializer,
                             PermissionUpdateSerializer)
 from .signals import permission_updated, user_logged_out
-from .tasks import send_otp_mail
 from .utils import create_permissions
 
 from accounts.models import User
 from base.constants import UPDATED, REVOKED, RESET, LOGIN, LOGOUT, SUCCESS
-from UACS import settings
 
 
 # Create your views here.
@@ -29,6 +27,7 @@ from UACS import settings
 def generate_otp():
     # Generate a random 6-digit OTP code
     return str(random.randint(100000, 999999))
+
 
 class LoginAPIView(TokenObtainPairView):
     """Endpoint to get authenticate user"""
@@ -128,7 +127,7 @@ class StaffAccessRevokeAPIView(ActivityLogMixin, generics.UpdateAPIView):
     def patch(self, request, *args, **kwargs):
         request.data['action'] = REVOKED
         instance = self.get_object()
-        print(instance)
+        
         if instance.is_active:
             instance.is_active = False
             instance.save()
@@ -219,13 +218,14 @@ class EmailOTPAPIView(generics.GenericAPIView):
         try:
             user = User.objects.filter(email=email).get()
             otp = generate_otp()
-            print(otp)
+            
             user.verification_code = otp
             user.save()
+            
             # Send the OTP code to the provided email
             subject = 'OTP Code'
             message = f'Your OTP code is: {otp}'
-            # send_otp_mail.delay(subject=subject, recipient=[email], message=message)
+
             msg = EmailMessage(
                 subject=subject,
                 body=message,
@@ -288,7 +288,10 @@ class ResetPasswordAPIView(generics.GenericAPIView):
     
 
 class DashboardCountAPIView(generics.GenericAPIView):
-    """Custom endpoint to populate count fields on dashboard"""
+    """
+    Custom endpoint to populate count fields on dashboard
+    for inactiver service providers and staffs with access
+    """
     def get(self, request, *args, **kwargs):
         inactive_sp = ServiceProvider.objects.filter(is_active=False).count()
         active_staff = Staff.active_objects.all().count()
@@ -376,223 +379,6 @@ class StaffPermissionUpdateAPIView(generics.GenericAPIView):
         # staff_permissions.filter(pk__in=permission_ids).values_list("is_permitted", flat=True).update(is_permitted=True)
         # staff_permissions.exclude(pk__in=permission_ids).values_list("is_permitted", flat=True).update(is_permitted=False)
         return Response({'message': f'Permissions for {staff.full_name()} updated successfully.'}, status=status.HTTP_201_CREATED)
-
-
-class DashAPIView(generics.GenericAPIView):
-    permission_classes = []
-    authentication_classes = []
-
-    def get(self, request, *args, **kwargs):
-
-        payload = {
-            "earnings": 11300.4,
-            "spend": 5398,
-            "sales": 19456,
-            "sales_percent": "28%",
-            "balance": 12398,
-            "new_tasks": 201,
-            "total_projects": 2933,
-            "daily_traffic": 253,
-            "check_table" : [
-
-                {
-                    "name": "Horizon UI Pro",
-                    "progress": "22.5%",
-                    "quantity": 3.65,
-                    "date": "13th May, 2022",
-                    "state" : False,
-                    "status": "Approved",
-                },
-                {
-                    "name": "Horizon UI Free",
-                    "progress": "12.3%",
-                    "quantity": 2.15,
-                    "date": "3rd Feb, 2022",
-                    "state" : True,
-                    "status": "Disabled",
-                },
-                {
-                    "name": "Weekly Update",
-                    "progress": "32.2%",
-                    "quantity": 1.53,
-                    "date": "18th Aug, 2023",
-                    "state" : True,
-                    "status": "Error",
-                },
-                {
-                    "name": "Venus 3D Asset",
-                    "progress": "12.75%",
-                    "quantity": 5.20,
-                    "date": "31st Oct, 2022",
-                    "state" : True,
-                    "status": "Approved",
-                },
-                {
-                    "name": "Marketplace",
-                    "progress": "15.5%",
-                    "quantity": 3.25,
-                    "date": "22nd Jul, 2023",
-                    "state" : False,
-                    "status": "Error",
-                }
-            ],
-            "tasks": [
-                {
-                    "name" : "Landing Page Design",
-                    "state" : False,
-                },
-                {
-                    "name" : "Dashboard Builder",
-                    "state" : True,
-                },
-                {
-                    "name" : "Mobile App Design",
-                    "state" : True,
-                },
-                {
-                    "name" : "Illustrations",
-                    "state" : False,
-                },
-                {
-                    "name" : "Promotional LP",
-                    "state" : False,
-                },
-            ],
-            "team_members": [
-                {
-                    "name" : "Chisom Okeoma",
-                    "role" : "Frontend Web Developer",
-                },
-                {
-                    "name" : "Daniel Momodu",
-                    "role" : "Backend Web Developer",
-                },
-                {
-                    "name" : "Tola Oduyomi",
-                    "role" : "Mobile Developer",
-                },
-            ]
-        }
-
-        return Response(payload, status=status.HTTP_200_OK)
-
-
-class MarketplaceAPIView(generics.GenericAPIView):
-    permission_classes = []
-    authentication_classes = []
-
-    def get(self, request, *args, **kwargs):
-        payload = {
-            "balance": "13.2 ETH",
-            "trending_nfts": [
-                {
-                    "name": "Abstract Colors",
-                    "creator": "Taofeeq Otu",
-                    "current_bid": "1.1 ETH",
-                },
-                {
-                    "name": "ETH AI Brain",
-                    "creator": "Hafsah Abiodun",
-                    "current_bid": "2.43 ETH",
-                },
-                {
-                    "name": "Mesh Gradients",
-                    "creator": "Orru Temisan",
-                    "current_bid": "1.2 ETH",
-                },
-            ],
-            "recently_added": [
-                {
-                    "name": "Swipe Circles",
-                    "creator": "Faith Adeosun",
-                    "current_bid": "1.62 ETH",
-                },
-                {
-                    "name": "Colorful Heaven",
-                    "creator": "Afolabi Adepena",
-                    "current_bid": "12.2 ETH",
-                },
-                {
-                    "name": "3D Cubes Art",
-                    "creator": "Maestro",
-                    "current_bid": "114 ETH",
-                },
-            ],
-            "top_creaters": [
-                {
-                    "name": "@xommie",
-                    "artworks": 7839,
-                },
-                {
-                    "name": "@maestro_himself",
-                    "artworks": 1,
-                },
-                {
-                    "name": "@yettybella",
-                    "artworks": 2311,
-                },
-                {
-                    "name": "@babataofeeq",
-                    "artworks": 1201,
-                },
-                {
-                    "name": "@badboymajeed",
-                    "artworks": 6524,
-                },
-                {
-                    "name": "@busolababy",
-                    "artworks": 5439,
-                },
-                {
-                    "name": "@lukmaninterimCTO",
-                    "artworks": 3567,
-                },
-                {
-                    "name": "@influencer007",
-                    "artworks": 4300,
-                },
-            ],
-            "history": [
-                 {
-                    "name": "Swipe Circles",
-                    "creator": "Faith Adeosun",
-                    "current_bid": "1.62 ETH",
-                    "time": "30s ago",
-                },
-                {
-                    "name": "Colorful Heaven",
-                    "creator": "Afolabi Adepena",
-                    "current_bid": "12.2 ETH",
-                    "time": "12m ago",
-                },
-                {
-                    "name": "3D Cubes Art",
-                    "creator": "Maestro",
-                    "current_bid": "114 ETH",
-                    "time": "15m ago",
-                },
-                {
-                    "name": "Abstract Colors",
-                    "creator": "Taofeeq Otu",
-                    "current_bid": "1.1 ETH",
-                    "time": "1d ago",
-                },
-                {
-                    "name": "ETH AI Brain",
-                    "creator": "Hafsah Abiodun",
-                    "current_bid": "2.43 ETH",
-                    "time": "3d ago",
-                },
-                {
-                    "name": "Mesh Gradients",
-                    "creator": "Orru Temisan",
-                    "current_bid": "1.2 ETH",
-                    "time": "13d ago",
-                },
-            ]
-        }
-
-        return Response(payload, status=status.HTTP_200_OK)
 
 
 class TrackedSitesAPIView(generics.GenericAPIView):
