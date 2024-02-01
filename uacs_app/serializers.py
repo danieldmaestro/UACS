@@ -38,8 +38,7 @@ class LoginSerializer(serializers.Serializer):
         payload = {
             'first_name': admin.first_name,
             'last_name': admin.last_name,
-            # 'profile_picture': request.build_absolute_uri(admin.profile_picture.url) if admin.profile_picture else "empty",
-            'profile_picture': 'https://atsbk.afexats.com/media/tech_star_picture/headshot-photo_-_Okeoma.jpg', #default admin image because pictures don't save on production
+            'profile_picture': request.build_absolute_uri(admin.profile_picture.url) if admin.profile_picture else "",
             'email': email,
             'access': access,
             'refresh': refresh,

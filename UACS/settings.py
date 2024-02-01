@@ -110,7 +110,6 @@ DATABASES = {
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        # "rest_framework.authentication.SessionAuthentication",
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     "DEFAULT_PERMISSION_CLASSES": [
@@ -123,19 +122,6 @@ REST_FRAMEWORK = {
 SPECTACULAR_SETTINGS = {
     'TITLE': "Unified Access Control System"
 }
-
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': os.environ.get("DB_ENGINE"),
-#         'NAME': os.environ.get("DB_NAME"),
-#         'USER': os.environ.get("DB_USER"),
-#         'PASSWORD': os.environ.get("DB_PASSWORD"),
-#         'HOST': os.environ.get("DB_HOST"),
-#         'PORT': os.environ.get("DB_PORT"),
-
-#     }
-# }
 
 
 # Password validation
@@ -172,7 +158,7 @@ PHONENUMBER_DEFAULT_FORMAT = "INTERNATIONAL"
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Africa/Lagos'
 
 USE_I18N = True
 

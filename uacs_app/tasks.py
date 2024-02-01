@@ -1,6 +1,7 @@
-from celery import shared_task
 from django.core.mail import EmailMessage
-from UACS import settings
+from django.conf import settings
+
+from celery import shared_task
 
 @shared_task
 def send_otp_mail(subject, recipient, message):    
